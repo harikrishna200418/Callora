@@ -1,0 +1,2035 @@
+# BATTERY-AWARE SOCIAL COMMUNICATION PLATFORM
+
+## Product Requirements Document & Software Requirements Specification
+
+**Document Version:** 1.0
+**Date:** August 2026
+**Project Type:** Mobile Communication & Social Networking Application
+**Initial Platform:** Android
+**Future Platform:** iOS
+**Primary Differentiator:** Battery-Aware Voice & Video Calling
+
+---
+
+# 1. Executive Summary
+
+The proposed application is a next-generation social communication platform combining the communication capabilities commonly found in applications such as WhatsApp, Telegram, Snapchat, and Instagram with a unique **Battery-Aware Calling System**.
+
+The application will allow users to:
+
+* Send and receive text messages
+* Make voice calls
+* Make video calls
+* Share images and videos
+* Share documents
+* Send voice messages
+* Create groups
+* Share status/stories
+* Manage contacts
+* Share locations
+* Receive notifications
+* Manage profiles
+* Make secure one-to-one and group communications
+
+The application's major innovation is its **Battery Protection System**.
+
+During an active voice or video call, the application continuously monitors the device's battery level. When the battery reaches a configurable critical threshold, such as **7% or 5%**, the application provides a warning and automatically terminates the active call before the device completely shuts down.
+
+The purpose is to preserve sufficient battery for emergency or important incoming calls and prevent the device from becoming completely unavailable because of a prolonged communication session.
+
+---
+
+# 2. Product Vision
+
+## Vision
+
+To build a modern communication platform that enables people to communicate, share, and connect while intelligently protecting their device's remaining battery.
+
+## Vision Statement
+
+**"Stay Connected Without Losing Your Last Charge."**
+
+The platform aims to combine:
+
+**Communication + Social Networking + Smart Battery Management**
+
+into a single mobile application.
+
+---
+
+# 3. Problem Statement
+
+Modern communication applications allow users to remain connected through long voice and video calls.
+
+However, users may frequently:
+
+* Fall asleep during video calls
+* Forget that a call is still active
+* Leave their phone connected overnight
+* Continue calls while the battery is critically low
+* Accidentally allow the device battery to reach 0%
+* Become unreachable when an important call arrives later
+
+For example:
+
+A user starts a video call at 30% battery.
+
+During the conversation, the users fall asleep.
+
+The call continues for several hours.
+
+The battery gradually decreases:
+
+30% → 20% → 15% → 10% → 7% → 5% → 0%
+
+The phone eventually shuts down.
+
+If an important person attempts to call the user after the device shuts down, the user cannot receive the call.
+
+The proposed application solves this problem using **Battery-Aware Call Protection**.
+
+---
+
+# 4. Proposed Solution
+
+The application will monitor the device battery during an active voice or video call.
+
+Example:
+
+**Battery = 15%**
+
+Normal call continues.
+
+**Battery = 10%**
+
+Application displays:
+
+> "Battery is getting low. Your call may end automatically at 7%."
+
+**Battery = 7%**
+
+Application automatically terminates the call.
+
+The user can then continue using the remaining battery for:
+
+* Emergency calls
+* Important incoming calls
+* Messages
+* Notifications
+* Navigation
+* Other essential phone functions
+
+---
+
+# 5. Core Unique Selling Proposition
+
+## Battery-Aware Calling
+
+The primary USP of the application is:
+
+> **Automatically end long-running voice/video calls when the device battery reaches a user-defined critical threshold.**
+
+Unlike conventional communication applications, battery level becomes an active part of the calling experience.
+
+### Default Threshold
+
+Recommended default:
+
+**7%**
+
+Optional emergency threshold:
+
+**5%**
+
+Users can configure:
+
+* 10%
+* 7%
+* 5%
+
+The application should not allow extremely low or unsafe thresholds without displaying an appropriate warning.
+
+---
+
+# 6. Target Users
+
+## Primary Users
+
+### Teenagers and Young Adults
+
+Users who frequently spend long periods on:
+
+* Video calls
+* Voice calls
+* Group calls
+* Social communication
+
+### Couples
+
+Users who frequently remain connected through long-duration video/audio calls, including users who may fall asleep while connected.
+
+### Students
+
+Students communicating with:
+
+* Friends
+* Classmates
+* Project teams
+* Study groups
+
+### Working Professionals
+
+Users who require:
+
+* Voice calls
+* Video meetings
+* Document sharing
+* Professional communication
+
+### General Smartphone Users
+
+Anyone who wants an additional safety mechanism against battery depletion during calls.
+
+---
+
+# 7. Product Goals
+
+The application should achieve the following goals:
+
+1. Provide reliable real-time communication.
+2. Support high-quality voice and video calls.
+3. Allow users to share multiple types of content.
+4. Provide modern social networking functionality.
+5. Protect battery availability during long calls.
+6. Prevent unnecessary device shutdown caused by prolonged calls.
+7. Provide strong privacy and security.
+8. Provide a simple and modern user experience.
+9. Support scalable architecture for millions of users.
+10. Provide a platform for future AI-powered communication features.
+
+---
+
+# 8. Functional Requirements
+
+## 8.1 User Registration
+
+Users should be able to create accounts using:
+
+* Mobile number
+* Email address
+* Password
+* OTP verification
+
+Optional future authentication:
+
+* Google Sign-In
+* Apple Sign-In
+* Passkeys
+
+### Registration Data
+
+* Full name
+* Username
+* Mobile number
+* Email
+* Profile picture
+* Date of birth
+* Country
+* Privacy preferences
+
+---
+
+# 9. User Authentication
+
+The system should support:
+
+* OTP verification
+* Login
+* Logout
+* Password recovery
+* Account recovery
+* Device verification
+* Session management
+* Multi-device login
+* Two-factor authentication
+
+---
+
+# 10. User Profile
+
+Each user should have a profile containing:
+
+* Profile picture
+* Name
+* Username
+* Bio
+* Online status
+* Last seen
+* Status/story
+* Privacy settings
+
+Users should be able to modify:
+
+* Profile picture
+* Name
+* Bio
+* Privacy settings
+* Notification settings
+* Calling settings
+* Battery protection settings
+
+---
+
+# 11. One-to-One Messaging
+
+Users should be able to communicate through real-time chat.
+
+Supported message types:
+
+* Text
+* Emoji
+* GIF
+* Stickers
+* Images
+* Videos
+* Documents
+* Audio
+* Voice messages
+* Contacts
+* Location
+* Links
+
+### Message Features
+
+* Send
+* Receive
+* Reply
+* Forward
+* Copy
+* Delete
+* Edit
+* React
+* Star/bookmark
+* Search
+* Pin
+* Mark unread
+
+---
+
+# 12. Message Status
+
+Messages should support:
+
+**Sent → Delivered → Read**
+
+Example:
+
+✓ Sent
+
+✓✓ Delivered
+
+✓✓ Read
+
+Users should have the ability to disable read receipts through privacy settings where supported.
+
+---
+
+# 13. Voice Messaging
+
+Users should be able to record and send voice messages.
+
+Features:
+
+* Press-and-hold recording
+* Lock recording
+* Cancel recording
+* Playback
+* Pause
+* Speed control
+* Delete
+* Forward
+
+---
+
+# 14. Voice Calling
+
+The application should support real-time voice calls.
+
+Features:
+
+* One-to-one voice calls
+* Group voice calls
+* Call history
+* Missed calls
+* Incoming calls
+* Outgoing calls
+* Speaker mode
+* Microphone mute
+* Bluetooth audio
+* Call duration
+
+---
+
+# 15. Video Calling
+
+Video calling is the **primary communication feature** of the application.
+
+Features:
+
+* One-to-one video calls
+* Group video calls
+* Front/rear camera switching
+* Microphone mute
+* Camera on/off
+* Speaker mode
+* Bluetooth audio
+* Network-quality indicator
+* Call duration
+* Call history
+* Screen sharing — future feature
+* Background effects — future feature
+
+---
+
+# 16. Battery-Aware Calling System
+
+## 16.1 Overview
+
+The Battery-Aware Calling System is the application's primary innovation.
+
+During an active voice/video call:
+
+**Call Session**
+
+↓
+
+**Battery Monitoring Service**
+
+↓
+
+**Read Battery Percentage**
+
+↓
+
+**Compare With Configured Threshold**
+
+↓
+
+If battery > threshold:
+
+**Continue Call**
+
+If battery ≤ threshold:
+
+**Display Warning / End Call**
+
+---
+
+# 17. Battery Threshold Logic
+
+Recommended system:
+
+| Battery Level | System Behaviour                  |
+| ------------- | --------------------------------- |
+| Above 15%     | Normal operation                  |
+| 15%           | Optional low-battery notification |
+| 10%           | Battery warning                   |
+| 7%            | Critical warning                  |
+| 5%            | Automatic call termination        |
+| 0%            | Device shutdown                   |
+
+The exact threshold should be configurable.
+
+### Recommended Default
+
+**7%**
+
+### Recommended Emergency Mode
+
+**5%**
+
+---
+
+# 18. Battery Protection Settings
+
+Users should be able to configure:
+
+### Battery Call Protection
+
+ON / OFF
+
+### Automatic Call Termination
+
+ON / OFF
+
+### Critical Battery Level
+
+Options:
+
+* 10%
+* 7%
+* 5%
+
+### Warning Before Termination
+
+Example:
+
+At 8%:
+
+> "Your battery is critically low. This call will end automatically at 7%."
+
+At 7%:
+
+> "Battery protection activated. Ending the call to preserve battery."
+
+---
+
+# 19. Battery Protection Flow
+
+Example:
+
+User A and User B start a video call.
+
+Battery of User A:
+
+**18%**
+
+Call continues.
+
+Battery:
+
+**12%**
+
+Application displays:
+
+> Low battery: 12%
+
+Battery:
+
+**10%**
+
+Application displays:
+
+> "Your battery is low. The call may end automatically when it reaches 7%."
+
+Battery:
+
+**8%**
+
+Countdown/warning can be displayed.
+
+Battery:
+
+**7%**
+
+Application automatically ends the call.
+
+System message:
+
+> "Call ended automatically to protect your remaining battery."
+
+The application returns the user to the chat screen.
+
+---
+
+# 20. Important Technical Clarification
+
+The application can control **its own active call**.
+
+It cannot universally control or terminate calls made through other applications such as:
+
+* WhatsApp
+* Instagram
+* Telegram
+* Phone dialer
+
+Therefore, the Battery Protection feature applies specifically to calls made through this application.
+
+---
+
+# 21. Battery Monitoring Architecture
+
+The application should use platform-supported battery APIs.
+
+For Android:
+
+* BatteryManager
+* BroadcastReceiver where appropriate
+* Foreground Service
+* Lifecycle-aware monitoring
+* Call session state
+
+The battery monitor should remain active only when required.
+
+It should not continuously run an unnecessary background process because that could itself consume battery.
+
+---
+
+# 22. Battery Monitoring Algorithm
+
+Pseudo logic:
+
+```text
+START CALL
+
+WHILE CALL IS ACTIVE
+
+    READ CURRENT BATTERY LEVEL
+
+    IF BATTERY <= WARNING_THRESHOLD
+        DISPLAY LOW BATTERY WARNING
+    END IF
+
+    IF BATTERY <= CRITICAL_THRESHOLD
+        DISPLAY FINAL WARNING
+        END CALL
+        RELEASE CAMERA
+        RELEASE MICROPHONE
+        STOP CALL SERVICE
+    END IF
+
+END WHILE
+```
+
+---
+
+# 23. Battery Protection Edge Cases
+
+The system must handle:
+
+### Charging During Call
+
+If the user connects a charger:
+
+Battery protection should continue monitoring, but automatic termination should be configurable.
+
+### Battery Increases
+
+Example:
+
+5% → charger connected → 8%
+
+The application should not terminate an already terminated call.
+
+### Battery Level Drops Suddenly
+
+Example:
+
+10% → 6%
+
+The application must immediately detect the new state and terminate the call if required.
+
+### Battery Saver Mode
+
+The application should detect battery saver mode and inform the user if it affects call quality.
+
+### Phone Temperature
+
+Future versions may monitor device temperature and warn users during prolonged video calls.
+
+---
+
+# 24. Contacts
+
+Users should be able to:
+
+* Search contacts
+* Add contacts
+* Remove contacts
+* Block contacts
+* Report users
+* Invite contacts
+* Import phone contacts
+
+---
+
+# 25. Group Chats
+
+Users should be able to create groups.
+
+Group features:
+
+* Group name
+* Group icon
+* Group description
+* Add members
+* Remove members
+* Admin roles
+* Group permissions
+* Group messaging
+* Group media
+* Group voice calls
+* Group video calls
+
+---
+
+# 26. Stories / Status
+
+The application should support temporary content.
+
+Users can publish:
+
+* Text
+* Images
+* Videos
+* Stickers
+* Music
+* Links
+
+Default expiry:
+
+**24 hours**
+
+Users should be able to control who can view their status.
+
+---
+
+# 27. Media Sharing
+
+Supported formats:
+
+* JPG
+* PNG
+* WEBP
+* MP4
+* MOV
+* GIF
+* PDF
+* DOC/DOCX
+* XLS/XLSX
+* PPT/PPTX
+* ZIP
+
+The system should implement:
+
+* Upload progress
+* Download progress
+* File preview
+* Compression
+* File size limits
+* Cloud storage
+* Secure download URLs
+
+---
+
+# 28. Document Sharing
+
+Users should be able to send documents through chat.
+
+Example:
+
+**Krishna → Rahul**
+
+PDF → Upload → Encrypt → Cloud Storage → Receiver Download
+
+The application should display:
+
+* File name
+* File size
+* File type
+* Upload status
+* Download status
+
+---
+
+# 29. Location Sharing
+
+Future versions should support:
+
+* Current location
+* Live location
+* Location pin
+* Location history controls
+
+Privacy must be strongly enforced.
+
+---
+
+# 30. Notifications
+
+Notifications should be generated for:
+
+* New message
+* New call
+* Missed call
+* Group invitation
+* New status
+* Document received
+* Friend request
+* Security alert
+
+Battery warnings should also be displayed during active calls.
+
+---
+
+# 31. Privacy Features
+
+Users should control:
+
+* Last seen
+* Online status
+* Profile picture visibility
+* Status visibility
+* Read receipts
+* Calling permissions
+* Group invitations
+* Blocked users
+* Location sharing
+* Contact discovery
+
+---
+
+# 32. Security Requirements
+
+The application should implement strong security.
+
+Required mechanisms:
+
+* TLS/HTTPS
+* Secure authentication
+* OTP verification
+* Password hashing
+* JWT/session security
+* Secure token storage
+* Encryption at rest
+* Encryption in transit
+* Rate limiting
+* Abuse prevention
+* Account lockout protection
+* Device/session management
+
+---
+
+# 33. End-to-End Encryption
+
+For private communications, the application should consider end-to-end encryption.
+
+Conceptually:
+
+**Sender**
+
+↓
+
+Encryption
+
+↓
+
+Internet
+
+↓
+
+Encrypted Server/Relay
+
+↓
+
+Recipient
+
+↓
+
+Decryption
+
+The server should not have access to plaintext private messages when E2EE is implemented.
+
+A production E2EE implementation should use a well-reviewed cryptographic protocol rather than inventing custom encryption.
+
+---
+
+# 34. Call Architecture
+
+Recommended real-time communication technology:
+
+### WebRTC
+
+WebRTC can provide:
+
+* Audio
+* Video
+* Real-time communication
+* Peer-to-peer media where appropriate
+* Secure media transport
+
+Supporting infrastructure:
+
+* Signaling Server
+* STUN Server
+* TURN Server
+
+Architecture:
+
+```text
+User A
+   |
+   | Signaling
+   v
+Signaling Server
+   |
+   v
+User B
+
+Media Path:
+User A <------ WebRTC ------> User B
+
+If direct connection fails:
+
+User A <---- TURN Server ----> User B
+```
+
+---
+
+# 35. Recommended Technology Stack
+
+## Mobile Application
+
+### Android
+
+**Kotlin**
+
+Recommended architecture:
+
+**MVVM / Clean Architecture**
+
+UI:
+
+**Jetpack Compose**
+
+Communication:
+
+**WebRTC**
+
+---
+
+## Future iOS
+
+**Swift + SwiftUI**
+
+WebRTC can be considered for cross-platform real-time media infrastructure.
+
+---
+
+# 36. Backend
+
+Recommended:
+
+**Java + Spring Boot**
+
+This aligns well with the project's scalable backend requirements.
+
+Backend services:
+
+* Authentication Service
+* User Service
+* Chat Service
+* Message Service
+* Media Service
+* Call Signaling Service
+* Notification Service
+* Group Service
+* Status Service
+* Battery Event Service
+* Admin Service
+
+---
+
+# 37. Database
+
+Primary database:
+
+**PostgreSQL**
+
+Possible supporting databases:
+
+**Redis**
+
+for:
+
+* Online presence
+* Session management
+* Caching
+* Rate limiting
+* Temporary call state
+
+Object storage:
+
+**AWS S3**
+
+for:
+
+* Images
+* Videos
+* Documents
+* Audio
+* Profile pictures
+
+---
+
+# 38. Real-Time Messaging
+
+Recommended technologies:
+
+* WebSocket
+* STOMP
+* Redis Pub/Sub
+* Kafka for large-scale event processing
+
+Example:
+
+```text
+User A
+   |
+WebSocket
+   |
+Chat Service
+   |
+Message Service
+   |
+Database
+   |
+WebSocket
+   |
+User B
+```
+
+---
+
+# 39. Push Notifications
+
+Android:
+
+**Firebase Cloud Messaging (FCM)**
+
+Notifications can be generated for:
+
+* Messages
+* Calls
+* Missed calls
+* Group activity
+* Security events
+
+---
+
+# 40. Cloud Infrastructure
+
+Recommended initial infrastructure:
+
+### Application
+
+AWS / equivalent cloud provider
+
+### Backend
+
+Spring Boot
+
+### Database
+
+PostgreSQL
+
+### Cache
+
+Redis
+
+### Storage
+
+Amazon S3
+
+### CDN
+
+CloudFront
+
+### DNS/Security
+
+Cloudflare
+
+### Monitoring
+
+CloudWatch / Grafana / Prometheus
+
+---
+
+# 41. Suggested Architecture
+
+```text
+                    MOBILE CLIENTS
+              ┌─────────────────────┐
+              │ Android / iOS       │
+              │ Chat                │
+              │ Voice Call          │
+              │ Video Call          │
+              │ Battery Monitor     │
+              └──────────┬──────────┘
+                         |
+                    API Gateway
+                         |
+        ┌────────────────┼────────────────┐
+        |                |                |
+ Auth Service       Chat Service      User Service
+        |                |                |
+        └────────────────┼────────────────┘
+                         |
+                Real-Time Layer
+                         |
+              WebSocket / WebRTC
+                         |
+        ┌────────────────┼────────────────┐
+        |                |                |
+   PostgreSQL         Redis          Object Storage
+                                      (S3)
+```
+
+---
+
+# 42. Backend Microservices
+
+For the production version, the system can be divided into:
+
+### 1. API Gateway
+
+Handles:
+
+* Routing
+* Authentication
+* Rate limiting
+
+### 2. Authentication Service
+
+Handles:
+
+* Registration
+* Login
+* OTP
+* Sessions
+
+### 3. User Service
+
+Handles:
+
+* Profiles
+* Contacts
+* Privacy
+
+### 4. Chat Service
+
+Handles:
+
+* Conversations
+* Messages
+* Message status
+
+### 5. Media Service
+
+Handles:
+
+* Image uploads
+* Video uploads
+* Documents
+
+### 6. Call Service
+
+Handles:
+
+* Call signaling
+* Call state
+* Call history
+
+### 7. Notification Service
+
+Handles:
+
+* Push notifications
+
+### 8. Group Service
+
+Handles:
+
+* Group creation
+* Membership
+* Permissions
+
+### 9. Status Service
+
+Handles:
+
+* Stories/status
+
+### 10. Admin Service
+
+Handles:
+
+* User management
+* Reports
+* Abuse detection
+* Analytics
+
+---
+
+# 43. Application Screens
+
+## Authentication
+
+1. Splash Screen
+2. Welcome Screen
+3. Login
+4. Register
+5. OTP Verification
+6. Create Profile
+
+## Main Application
+
+7. Home
+8. Chats
+9. Calls
+10. Status
+11. Contacts
+12. Profile
+13. Settings
+
+## Chat
+
+14. Chat List
+15. Individual Chat
+16. Group Chat
+17. Media Viewer
+18. Document Viewer
+19. Location Viewer
+
+## Calling
+
+20. Incoming Call
+21. Outgoing Call
+22. Active Voice Call
+23. Active Video Call
+24. Call History
+25. Battery Warning
+26. Battery Protection Settings
+
+---
+
+# 44. UI/UX Design
+
+The application should have a modern interface rather than copying the exact UI of existing platforms.
+
+Recommended design language:
+
+**Modern + Minimal + Premium + Social**
+
+Recommended characteristics:
+
+* Clean typography
+* Smooth animations
+* Rounded cards
+* Modern icons
+* Dark mode
+* Light mode
+* Glass effects where appropriate
+* Gesture interactions
+* Fast navigation
+
+---
+
+# 45. Home Screen
+
+Possible navigation:
+
+```text
+--------------------------------
+| App Logo        Search   +   |
+--------------------------------
+| Chats | Status | Calls       |
+--------------------------------
+
+Recent Conversations
+
+[Profile] Rahul
+Video call • 10:32 PM
+
+[Profile] Priya
+Message • 9:41 PM
+
+[Profile] Arjun
+Missed call • 8:12 PM
+
+--------------------------------
+        Navigation Bar
+ Chats | Calls | Status | Profile
+--------------------------------
+```
+
+---
+
+# 46. Active Video Call UI
+
+```text
+--------------------------------
+|                              |
+|        VIDEO STREAM          |
+|                              |
+|                              |
+|                    [Self]    |
+|                              |
+--------------------------------
+
+Battery: 12% 🔋
+
+"Battery protection active"
+
+--------------------------------
+| Mic | Camera | Speaker | End |
+--------------------------------
+```
+
+At critical battery:
+
+```text
+        LOW BATTERY
+
+Battery: 7%
+
+This call will end automatically
+to preserve your remaining battery.
+
+             [OK]
+```
+
+---
+
+# 47. Battery Protection User Experience
+
+The system should never silently terminate a call without explanation.
+
+Recommended flow:
+
+### Warning 1
+
+At 10%:
+
+> "Your battery is low. Battery protection is active."
+
+### Warning 2
+
+At 8%:
+
+> "The call will automatically end at 7%."
+
+### Final Action
+
+At 7%:
+
+> "Call ended automatically to preserve battery for important communication."
+
+This makes the feature understandable and user-friendly.
+
+---
+
+# 48. Admin Dashboard
+
+The platform should have a web-based administration panel.
+
+Admin features:
+
+* Dashboard
+* User management
+* Report management
+* Blocked accounts
+* Content moderation
+* Call analytics
+* System health
+* Storage usage
+* Active users
+* Daily active users
+* Monthly active users
+* Call duration
+* Message statistics
+* Battery-protection statistics
+
+---
+
+# 49. Analytics
+
+Important metrics:
+
+### User Metrics
+
+* DAU
+* MAU
+* New registrations
+* Retention
+* Active users
+
+### Communication Metrics
+
+* Messages sent
+* Voice calls
+* Video calls
+* Average call duration
+* Group calls
+
+### Battery Feature Metrics
+
+* Number of protected calls
+* Calls automatically terminated
+* Average battery level at termination
+* Users using 5% threshold
+* Users using 7% threshold
+* Users using 10% threshold
+
+The Battery Protection analytics can become an important differentiator for product validation.
+
+---
+
+# 50. Abuse Prevention
+
+Because this is a social platform, the application must support:
+
+* Block
+* Report
+* Spam detection
+* User moderation
+* Rate limiting
+* Account suspension
+* Content reporting
+* Fake account detection
+* Automated abuse detection
+
+---
+
+# 51. Legal & Compliance Requirements
+
+The production application must include:
+
+* Privacy Policy
+* Terms of Service
+* Community Guidelines
+* Data deletion mechanism
+* Account deletion
+* Consent management
+* Data protection procedures
+* Age-related safeguards
+* User reporting mechanism
+
+Since the target audience may include teenagers, additional safety and privacy considerations should be built into the product.
+
+---
+
+# 52. Non-Functional Requirements
+
+## Performance
+
+Target:
+
+* Chat message delivery: near real-time
+* Call connection: preferably within a few seconds
+* App launch: preferably under 3 seconds on supported devices
+
+## Availability
+
+Production target:
+
+**99.9%+**
+
+## Scalability
+
+Architecture should support:
+
+* 10,000 users
+* 100,000 users
+* 1 million users
+* Future horizontal scaling
+
+---
+
+# 53. Security Requirements
+
+The system must protect:
+
+* Personal information
+* Messages
+* Media
+* Documents
+* Call signaling
+* Authentication credentials
+* Session tokens
+
+Security testing should include:
+
+* API penetration testing
+* Authentication testing
+* Authorization testing
+* SQL injection testing
+* XSS testing
+* Rate-limit testing
+* File-upload security testing
+
+---
+
+# 54. MVP Scope
+
+The first version should NOT attempt to build every feature of WhatsApp, Telegram, Instagram, and Snapchat simultaneously.
+
+The recommended MVP should focus on the application's unique value proposition.
+
+## MVP Features
+
+### Authentication
+
+* Registration
+* Login
+* OTP
+
+### Messaging
+
+* One-to-one chat
+* Text
+* Image
+* Document
+* Voice message
+
+### Calling
+
+* Voice call
+* Video call
+* Call history
+
+### Battery Protection
+
+* Battery monitoring
+* 10% warning
+* 7% automatic termination
+* Configurable threshold
+* Battery protection settings
+
+### Profile
+
+* Profile
+* Privacy
+* Settings
+
+### Notifications
+
+* Message notifications
+* Incoming call notifications
+* Missed call notifications
+
+---
+
+# 55. Phase 2
+
+After MVP:
+
+* Group chat
+* Group calls
+* Status/stories
+* GIFs
+* Stickers
+* Location sharing
+* Message reactions
+* Message editing
+* Message forwarding
+* Search
+* Multi-device support
+
+---
+
+# 56. Phase 3
+
+Advanced features:
+
+* Screen sharing
+* AI chatbot
+* AI message summarization
+* AI translation
+* Voice transcription
+* Smart spam detection
+* AI moderation
+* Smart battery prediction
+* Call quality prediction
+
+---
+
+# 57. Future Innovation
+
+The Battery Protection System can evolve beyond a simple percentage threshold.
+
+Instead of only:
+
+**Battery < 7% → End Call**
+
+the application could eventually consider:
+
+* Battery percentage
+* Charging state
+* Battery health
+* Device temperature
+* Network strength
+* Call duration
+* Video resolution
+* Current power consumption
+
+Example:
+
+```text
+Battery = 8%
+Temperature = High
+Video Quality = 1080p
+Call Duration = 4 hours
+
+System Recommendation:
+
+"Your device is consuming battery rapidly.
+Would you like to reduce video quality?"
+```
+
+This could become a more advanced feature called:
+
+## Smart Battery Call Protection
+
+---
+
+# 58. Competitive Differentiation
+
+| Feature                         | Traditional Communication Apps | Proposed Application |
+| ------------------------------- | ------------------------------ | -------------------- |
+| Text Chat                       | ✓                              | ✓                    |
+| Voice Calls                     | ✓                              | ✓                    |
+| Video Calls                     | ✓                              | ✓                    |
+| Media Sharing                   | ✓                              | ✓                    |
+| Documents                       | ✓                              | ✓                    |
+| Groups                          | ✓                              | ✓                    |
+| Stories/Status                  | ✓                              | ✓                    |
+| Battery-Aware Calling           | Limited/Not Core               | **✓ Core Feature**   |
+| Automatic Call Termination      | Not Core                       | **✓**                |
+| Battery Threshold Configuration | Limited                        | **✓**                |
+| Battery Preservation Focus      | No                             | **✓**                |
+
+The product should therefore compete on **battery-aware communication**, rather than trying to immediately compete feature-for-feature with every social platform.
+
+---
+
+# 59. Key Product Differentiator
+
+## Battery-Aware Communication Engine
+
+The product's core technology should be branded independently.
+
+Possible names:
+
+* **BatteryGuard**
+* **CallShield**
+* **PowerCall**
+* **ChargeSafe**
+* **CallSaver**
+* **PowerGuard**
+* **SmartCall Protect**
+
+Recommended:
+
+### CallShield™
+
+> "Protect your battery. Stay available."
+
+---
+
+# 60. Example User Journey
+
+### Step 1
+
+User installs application.
+
+### Step 2
+
+User registers using mobile number.
+
+### Step 3
+
+User creates profile.
+
+### Step 4
+
+User selects:
+
+**Battery Protection: ON**
+
+### Step 5
+
+User selects:
+
+**Automatic Call End: 7%**
+
+### Step 6
+
+User starts video call.
+
+### Step 7
+
+Call continues for several hours.
+
+### Step 8
+
+Battery reaches 10%.
+
+Application displays warning.
+
+### Step 9
+
+Battery reaches 8%.
+
+Application displays final warning.
+
+### Step 10
+
+Battery reaches 7%.
+
+Application terminates call.
+
+### Step 11
+
+Phone remains operational.
+
+### Step 12
+
+User remains available for important calls/messages.
+
+---
+
+# 61. Development Roadmap
+
+## Phase 1 — Planning
+
+Duration: 1–2 weeks
+
+* Requirements
+* UI/UX
+* Architecture
+* Database design
+* Security design
+
+## Phase 2 — Authentication
+
+Duration: 1–2 weeks
+
+* Registration
+* Login
+* OTP
+* Profile
+
+## Phase 3 — Messaging
+
+Duration: 3–4 weeks
+
+* Chat
+* WebSocket
+* Media
+* Documents
+* Notifications
+
+## Phase 4 — Voice/Video Calling
+
+Duration: 3–5 weeks
+
+* WebRTC
+* Signaling
+* STUN
+* TURN
+* Call UI
+* Call history
+
+## Phase 5 — Battery Protection
+
+Duration: 1–2 weeks
+
+* Battery API
+* Monitoring
+* Warning system
+* Automatic call termination
+* Settings
+
+## Phase 6 — Testing
+
+Duration: 2–3 weeks
+
+* Unit testing
+* Integration testing
+* Device testing
+* Network testing
+* Battery testing
+* Security testing
+
+## Phase 7 — Production
+
+* Cloud deployment
+* Monitoring
+* Play Store release
+* Analytics
+* Crash monitoring
+
+---
+
+# 62. Testing Strategy
+
+## Functional Testing
+
+Test:
+
+* Registration
+* Login
+* Chat
+* Media
+* Documents
+* Calls
+* Battery protection
+
+## Battery Testing
+
+Important test scenarios:
+
+### Scenario 1
+
+Battery = 20%
+
+Expected:
+
+Call continues.
+
+### Scenario 2
+
+Battery = 10%
+
+Expected:
+
+Warning displayed.
+
+### Scenario 3
+
+Battery = 7%
+
+Expected:
+
+Call automatically terminates.
+
+### Scenario 4
+
+Battery suddenly changes:
+
+10% → 6%
+
+Expected:
+
+Call terminates immediately.
+
+### Scenario 5
+
+Battery = 8%, charger connected
+
+Expected:
+
+Charging state detected.
+
+### Scenario 6
+
+Phone enters battery saver mode
+
+Expected:
+
+Application handles the state gracefully.
+
+---
+
+# 63. Important Product Constraint
+
+The battery-protection system should be implemented as a **safety/availability feature**, not as a promise that a specific percentage will always preserve a fixed amount of battery time.
+
+Actual remaining battery life varies depending on:
+
+* Device model
+* Battery health
+* Screen brightness
+* Network
+* Camera usage
+* CPU load
+* Temperature
+* Background applications
+
+Therefore, the application should describe the feature as:
+
+> **"Preserving battery availability by ending the application's active call before the configured critical battery level."**
+
+rather than guaranteeing a specific amount of remaining battery life.
+
+---
+
+# 64. Recommended Initial Technology Stack
+
+### Mobile
+
+**Kotlin + Jetpack Compose**
+
+### Backend
+
+**Java + Spring Boot**
+
+### API
+
+**REST API**
+
+### Real-Time
+
+**WebSocket**
+
+### Video/Audio
+
+**WebRTC**
+
+### Database
+
+**PostgreSQL**
+
+### Cache
+
+**Redis**
+
+### Storage
+
+**Amazon S3**
+
+### Push Notifications
+
+**Firebase Cloud Messaging**
+
+### Authentication
+
+**JWT + OTP**
+
+### Deployment
+
+**Docker**
+
+### CI/CD
+
+**GitHub Actions**
+
+### Cloud
+
+**AWS**
+
+---
+
+# 65. Recommended Project Structure
+
+```text
+battery-aware-app/
+│
+├── mobile/
+│   └── android/
+│
+├── backend/
+│   ├── api-gateway/
+│   ├── auth-service/
+│   ├── user-service/
+│   ├── chat-service/
+│   ├── media-service/
+│   ├── call-service/
+│   ├── notification-service/
+│   ├── group-service/
+│   └── admin-service/
+│
+├── infrastructure/
+│   ├── docker/
+│   ├── database/
+│   └── deployment/
+│
+├── documentation/
+│   ├── requirements/
+│   ├── architecture/
+│   ├── api/
+│   └── testing/
+│
+└── README.md
+```
+
+---
+
+# 66. Success Criteria
+
+The MVP will be considered successful when:
+
+* Users can register and authenticate.
+* Users can communicate through real-time messaging.
+* Users can share media/documents.
+* Users can make reliable voice calls.
+* Users can make reliable video calls.
+* Battery level is detected during calls.
+* Battery warnings are displayed correctly.
+* Calls automatically terminate at the configured threshold.
+* The device remains available after the call ends.
+* User data is securely handled.
+* Application performs reliably under normal network conditions.
+
+---
+
+# 67. Final Product Positioning
+
+The application should **not be positioned simply as "another WhatsApp."**
+
+Its positioning should be:
+
+## "A Smart Communication Platform With Battery-Aware Calling."
+
+The product combines familiar communication features with a specific problem-solving capability.
+
+### Core Message
+
+**Chat. Call. Connect. Stay Available.**
+
+### USP
+
+**"Your call shouldn't consume the battery you need for your next important call."**
+
+---
+
+# 68. Final Recommendation
+
+The best development strategy is:
+
+**Do NOT build WhatsApp + Instagram + Snapchat + Telegram all at once.**
+
+Instead, build:
+
+### Version 1
+
+**Chat + Voice Call + Video Call + Document Sharing + Battery Protection**
+
+Then validate whether users actually value the Battery-Aware Calling feature.
+
+After validation, expand into:
+
+**Groups → Status → Stories → Media → AI → Social Features**
+
+This approach reduces development cost, reduces technical complexity, and makes your application's unique value immediately measurable.
+
+---
+
+# 69. MVP One-Line Definition
+
+> **A real-time communication application that provides chat, voice/video calling and file sharing while intelligently monitoring device battery levels and automatically ending active calls at a user-defined critical battery threshold to preserve device availability for important communication.**
+
+---
+
+# 70. Product Tagline Options
+
+### Option 1
+
+**Stay Connected. Stay Available.**
+
+### Option 2
+
+**Your Battery. Your Connection. Your Control.**
+
+### Option 3
+
+**Call Longer. Disconnect Smarter.**
+
+### Option 4
+
+**Protect Your Last Charge.**
+
+### Option 5 — Recommended
+
+**Connect Smart. Stay Available.**

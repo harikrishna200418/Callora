@@ -1,0 +1,277 @@
+{
+  "document": {
+    "title": "Software Architecture Document",
+    "project": "Battery-Aware Social Communication Platform",
+    "codename": "CallShield",
+    "version": "1.0",
+    "date": "August 2026",
+    "preparedFor": "Hari Krishna Mangali",
+    "buildToolchain": ["Google Antigravity (Agent Manager + Editor)", "Gemini 3 Pro", "Gemini 3 Flash", "Claude Sonnet"]
+  },
+
+  "1_purpose_and_scope": {
+    "purpose": "Defines the end-to-end architecture for the Battery-Aware Social Communication Platform and specifies how to build it inside Google Antigravity, an agent-first development platform. It translates the PRD into system boundaries, service contracts, data models, and an agent-executable build plan.",
+    "audience": ["Human engineers needing a reference architecture", "AI coding agents (Gemini 3 Pro / Claude Sonnet in Antigravity) using this file as their primary planning artifact"],
+    "inScope": [
+      "Mobile client architecture (Android, Kotlin, Jetpack Compose)",
+      "Backend microservices architecture (Java / Spring Boot)",
+      "Battery-Aware Calling System (core differentiator)",
+      "Real-time messaging and WebRTC calling architecture",
+      "Data, security, and infrastructure architecture",
+      "Antigravity-based agentic build plan"
+    ],
+    "outOfScope": [
+      "Detailed iOS implementation (deferred to Phase 2)",
+      "Detailed visual UI/UX design (separate spec)"
+    ]
+  },
+
+  "2_architecture_principles": [
+    { "principle": "Separation of concerns", "description": "Battery monitoring, call signaling, and media transport are decoupled services so the safety-critical battery logic can be tested and shipped independently." },
+    { "principle": "Fail-safe by default", "description": "If the Battery Monitoring module cannot read battery state, the system must never block emergency call visibility or crash the call — it degrades to warning-only mode." },
+    { "principle": "Client-authoritative battery decisions", "description": "Battery level is device-local; the termination decision is made on-device for zero latency, then reported to the backend for history/analytics." },
+    { "principle": "Stateless services, stateful stores", "description": "All Spring Boot services are horizontally scalable and stateless; state lives in PostgreSQL, Redis, and S3 only." },
+    { "principle": "Agent-buildable modularity", "description": "Every service/module is scoped to a single domain so one Antigravity agent task can own it end-to-end, including tests." },
+    { "principle": "Verifiability", "description": "Every architectural component maps to an automated test and an Antigravity Artifact (walkthrough, screenshot, or test report)." },
+    { "principle": "Security & privacy by design", "description": "TLS everywhere, encryption at rest, least-privilege service accounts, and an E2EE path for 1:1 chat." }
+  ],
+
+  "3_high_level_architecture": {
+    "description": "Layered, microservices-based architecture with a mobile client, an API/real-time gateway layer, domain microservices, and shared data infrastructure.",
+    "layers": [
+      { "layer": "Mobile Client", "components": ["Android (Kotlin/Compose)", "Battery Monitor Module"], "protocols": ["REST/JSON", "WebSocket", "WebRTC (media)"] },
+      { "layer": "API Gateway", "responsibilities": ["routing", "authn/authz", "rate limiting"] },
+      { "layer": "Domain Services", "components": ["Auth Service", "User Service", "Chat Service", "Media Service", "Call Service", "Notification Service", "Group Service", "Status Service", "Admin Service"] },
+      { "layer": "Data Infrastructure", "components": ["PostgreSQL (per-service DB)", "Redis (cache/presence)", "Object Store S3 (media, documents)", "Kafka (event bus)", "WebRTC/TURN (signaling + media relay)"] }
+    ]
+  },
+
+  "4_mobile_client_architecture": {
+    "pattern": "Clean Architecture with MVVM presentation layer, Kotlin + Jetpack Compose",
+    "rationale": "Keeps Battery-Aware Calling logic testable in isolation from Android framework classes.",
+    "moduleStructure": {
+      "presentation": ["chat/", "calling/CallScreen.kt", "calling/CallViewModel.kt", "calling/BatteryWarningBanner.kt", "settings/battery/"],
+      "domain": ["usecase/StartCallUseCase.kt", "usecase/MonitorBatteryDuringCallUseCase.kt", "usecase/TerminateCallOnLowBatteryUseCase.kt", "model/BatteryThreshold.kt"],
+      "data": ["battery/BatteryRepositoryImpl.kt (wraps BatteryManager)", "call/CallRepositoryImpl.kt (wraps WebRTC SDK)", "chat/", "media/", "auth/", "user/"],
+      "core": ["DI (Hilt)", "networking", "WebSocket client"]
+    },
+    "batteryMonitorModule": {
+      "implementation": "Android Foreground Service, started only when a call begins and stopped the instant the call ends",
+      "components": [
+        { "name": "CallForegroundService", "responsibility": "Owns the active call lifecycle; hosts the BroadcastReceiver for ACTION_BATTERY_CHANGED." },
+        { "name": "BatteryMonitorUseCase", "responsibility": "Pure-Kotlin state machine: reads battery %, compares to configured thresholds, emits BatteryState (Normal/Warning/Critical)." },
+        { "name": "CallTerminationController", "responsibility": "Subscribes to BatteryState; on Critical, releases camera/mic, tears down the WebRTC PeerConnection, and stops the foreground service." },
+        { "name": "BatterySettingsRepository", "responsibility": "Persists user-configured thresholds (10%/7%/5%) in DataStore/Room." }
+      ]
+    }
+  },
+
+  "5_battery_aware_calling_system": {
+    "description": "The product's primary innovation, treated as a first-class subsystem with its own state machine, independent of general call-quality logic.",
+    "stateMachine": {
+      "states": ["NORMAL", "LOW_BATTERY_WARNING", "CRITICAL"],
+      "transitions": [
+        { "from": "NORMAL", "to": "LOW_BATTERY_WARNING", "condition": "battery <= 10%" },
+        { "from": "LOW_BATTERY_WARNING", "to": "CRITICAL", "condition": "battery <= 7%", "effect": "call terminated, camera+mic freed" },
+        { "from": "CRITICAL", "to": null, "condition": "terminal state — no auto-resume even if battery rises (e.g. charger connected)" }
+      ]
+    },
+    "sequence_battery_monitoring_during_call": [
+      "Mobile UI: start call",
+      "CallForegroundService: start(callId)",
+      "BatteryMonitorUseCase: subscribe(battery)",
+      "BatteryMonitorUseCase: onBatteryChanged() -> evaluate(level, thresholds)",
+      "BatteryMonitorUseCase -> Mobile UI: BatteryState.Warning -> WARNING banner shown",
+      "BatteryMonitorUseCase: level <= critical",
+      "BatteryMonitorUseCase -> CallForegroundService: BatteryState.Critical",
+      "CallForegroundService -> WebRTC Engine: stop tracks / close()",
+      "CallForegroundService -> Call Service (BE): POST /calls/end",
+      "Mobile UI: call ended toast"
+    ],
+    "thresholdConfiguration": [
+      { "batteryLevel": ">15%", "behaviour": "Normal operation, no UI change", "owningLayer": "Client (BatteryMonitorUseCase)" },
+      { "batteryLevel": "15%", "behaviour": "Optional low-battery notice (configurable)", "owningLayer": "Client" },
+      { "batteryLevel": "10%", "behaviour": "Persistent low-battery warning banner in call UI", "owningLayer": "Client" },
+      { "batteryLevel": "7% (default)", "behaviour": "Final warning, then automatic call termination", "owningLayer": "Client, event reported to Call Service" },
+      { "batteryLevel": "5% (optional/emergency)", "behaviour": "Same as above with a stricter cut-off for opted-in users", "owningLayer": "Client" }
+    ],
+    "edgeCases": [
+      { "case": "Charging during a call", "behaviour": "Monitoring continues; auto-termination becomes configurable rather than forced, since depletion risk is reduced." },
+      { "case": "Battery rises after termination", "behaviour": "State machine is one-directional per call; a terminated call is never auto-resumed." },
+      { "case": "Sudden drops (e.g. 10% -> 6%)", "behaviour": "Evaluation happens on every ACTION_BATTERY_CHANGED broadcast, not a fixed poll interval, so a skipped step still terminates on the next event." },
+      { "case": "Battery Saver mode", "behaviour": "Detected via PowerManager.isPowerSaveMode(); surfaced as a non-blocking advisory (may affect call quality)." },
+      { "case": "Read failure / unsupported device", "behaviour": "Fail open on visibility (never hide the call UI); fail safe on protection (disable auto-termination, show a persistent 'battery protection unavailable' notice)." }
+    ]
+  },
+
+  "6_backend_microservices": {
+    "stack": "Java 21 + Spring Boot 3, one deployable per bounded context",
+    "communication": {
+      "synchronous": "REST/gRPC between gateway and services, and service-to-service lookups needing an immediate answer",
+      "asynchronous": "Kafka topics: message.sent, call.started, call.terminated.low_battery, status.published, notification.requested",
+      "realtime": "WebSocket (STOMP) for chat delivery/presence; dedicated WebSocket signaling channel for WebRTC (offer/answer/ICE)"
+    },
+    "services": [
+      { "name": "API Gateway", "responsibility": "Routing, authn/z, rate limiting, request aggregation", "datastore": "Redis (rate-limit counters)", "keyApis": ["Spring Cloud Gateway routes"] },
+      { "name": "Auth Service", "responsibility": "Registration, OTP, login, JWT issuance, sessions, 2FA", "datastore": "PostgreSQL (auth schema)", "keyApis": ["POST /auth/register", "POST /auth/otp", "POST /auth/login"] },
+      { "name": "User Service", "responsibility": "Profiles, contacts, privacy settings, blocking", "datastore": "PostgreSQL (user schema)", "keyApis": ["GET /users/{id}", "GET /users/{id}/contacts"] },
+      { "name": "Chat Service", "responsibility": "Conversations, messages, message status, search", "datastore": "PostgreSQL + Redis (presence)", "keyApis": ["GET/POST /chats", "GET/POST /chats/{id}/messages", "WS /ws/chat"] },
+      { "name": "Media Service", "responsibility": "Upload/download brokering, transcoding hooks, virus scan", "datastore": "S3 + PostgreSQL (metadata)", "keyApis": ["POST /media/upload", "GET /media/{id}"] },
+      { "name": "Call Service", "responsibility": "Call signaling, call state, call history, battery-event log", "datastore": "PostgreSQL + Redis (live call state)", "keyApis": ["POST /calls/start", "POST /calls/end", "WS /ws/signaling", "POST /calls/{id}/battery-events"] },
+      { "name": "Notification Service", "responsibility": "Push notification dispatch (FCM), templating", "datastore": "PostgreSQL (delivery log)", "keyApis": ["POST /notifications/send (internal, event-driven)"] },
+      { "name": "Group Service", "responsibility": "Group CRUD, membership, roles/permissions", "datastore": "PostgreSQL (group schema)", "keyApis": ["GET/POST /groups", "GET/POST /groups/{id}/members"] },
+      { "name": "Status Service", "responsibility": "24-hour stories/status content and viewer lists", "datastore": "PostgreSQL + S3", "keyApis": ["GET/POST /status", "GET /status/{id}/views"] },
+      { "name": "Admin Service", "responsibility": "Moderation, reports, abuse detection, analytics dashboards", "datastore": "PostgreSQL (read replicas) + analytics store", "keyApis": ["GET /admin/reports", "POST /admin/users/{id}/action"] }
+    ]
+  },
+
+  "7_realtime_and_calling_architecture": {
+    "media": "WebRTC for peer-to-peer audio/video",
+    "signalingRole": "Call Service brokers SDP offer/answer and ICE candidates over WebSocket; never touches raw audio/video",
+    "sequence": [
+      "Caller -> Call Service: WS offer(sdp)",
+      "Call Service -> Callee: WS offer(sdp)",
+      "Callee -> Call Service: WS answer(sdp)",
+      "Call Service -> Caller: WS answer(sdp)",
+      "Both peers exchange ICE candidates via signaling",
+      "Media flows P2P (SRTP) when possible, else relayed via TURN server"
+    ],
+    "infrastructure": [
+      { "component": "Signaling Server (Call Service)", "role": "Exchanges SDP/ICE over WebSocket; tracks call state (ringing, active, ended, ended_low_battery)." },
+      { "component": "STUN Server", "role": "Helps each peer discover its public IP/port for direct P2P connectivity." },
+      { "component": "TURN Server", "role": "Relays encrypted media when direct P2P is not possible." },
+      { "component": "SFU (future)", "role": "Recommended for group video calls beyond MVP to avoid full-mesh bandwidth cost." }
+    ]
+  },
+
+  "8_data_architecture": {
+    "storageStrategy": [
+      { "store": "PostgreSQL (per-service schema)", "usedFor": "System of record: users, auth, message metadata, calls, groups, status metadata, reports." },
+      { "store": "Redis", "usedFor": "Online presence, WebSocket session routing, live call state, rate-limit counters, short-lived OTP codes." },
+      { "store": "Amazon S3", "usedFor": "Images, videos, documents, voice messages, profile pictures, status media — accessed via signed URLs only." },
+      { "store": "Kafka", "usedFor": "Durable event log for delivery guarantees, call lifecycle events (incl. low-battery terminations), analytics ingestion." }
+    ],
+    "coreEntities": {
+      "users": ["id", "phone", "email", "username", "password_hash", "created_at"],
+      "contacts": ["user_id", "contact_user_id", "status", "blocked"],
+      "conversations": ["id", "type[1:1|group]", "created_at"],
+      "messages": ["id", "conversation_id", "sender_id", "type", "content_ref", "status", "sent_at"],
+      "calls": ["id", "conversation_id", "type[voice|video]", "started_at", "ended_at", "end_reason"],
+      "battery_events": ["id", "call_id", "battery_level", "event_type[warning|critical]", "occurred_at"],
+      "groups": ["id", "name", "icon_ref", "created_by"],
+      "group_members": ["group_id", "user_id", "role"],
+      "status_posts": ["id", "user_id", "content_ref", "expires_at"],
+      "status_views": ["status_id", "viewer_id"]
+    },
+    "note": "battery_events makes the core USP measurable: every warning and every automatic termination is logged with exact battery percentage and call context, feeding the analytics needed to validate the feature."
+  },
+
+  "9_security_architecture": [
+    "Transport: TLS 1.3 everywhere (client<->gateway, service<->service, service<->datastore)",
+    "AuthN: OTP + password with JWT access/refresh tokens; refresh tokens rotated and stored hashed",
+    "AuthZ: per-service scope checks at the gateway plus method-level checks in each service",
+    "Encryption at rest: PostgreSQL volume encryption, S3 SSE-KMS",
+    "End-to-end encryption: 1:1 chat encrypted client-side (Signal-style Double Ratchet); Chat Service stores ciphertext only",
+    "Abuse prevention: gateway rate limiting (Redis token bucket), report/block pipeline into Admin Service, automated content flags",
+    "Session/device management: multi-device login with per-device session revocation"
+  ],
+
+  "10_infrastructure_and_deployment": {
+    "pipeline": ["Cloudflare (DNS/WAF)", "CloudFront (CDN)", "AWS ECS/EKS (containerised services)", "RDS (PostgreSQL) + ElastiCache (Redis)", "S3 buckets (media, docs, backups)", "CloudWatch + Grafana/Prometheus (observability)"],
+    "stack": [
+      { "layer": "Containerisation", "technology": "Docker; one image per microservice, multi-stage builds" },
+      { "layer": "Orchestration", "technology": "Amazon ECS (MVP) -> EKS (Kubernetes) at scale" },
+      { "layer": "CI/CD", "technology": "GitHub Actions — build, test, scan, push image, deploy" },
+      { "layer": "IaC", "technology": "Terraform for VPC, RDS, ECS/EKS, S3, IAM" },
+      { "layer": "Observability", "technology": "CloudWatch (logs/metrics), Prometheus + Grafana (dashboards), Sentry/Crashlytics (mobile crash reporting)" }
+    ]
+  },
+
+  "11_building_with_google_antigravity": {
+    "description": "Google Antigravity is Google's agent-first development platform (a modified VS Code fork) in which AI agents (Gemini 3 Pro, Claude Sonnet, GPT-OSS) plan, write, test, and verify code directly against the Editor, a Terminal, and a Browser, producing reviewable Artifacts instead of opaque diffs.",
+    "workspaceLayout": {
+      "root": "battery-aware-app/",
+      "structure": {
+        ".antigravity/": ["knowledge/  (agent-persisted context & code snippets)", "skills/     (reusable SKILL.md playbooks)"],
+        "docs/": ["architecture/ARCHITECTURE.md  <- this document, source of truth for agents", "api/  (OpenAPI specs per service)", "adr/  (Architecture Decision Records)"],
+        "mobile/android/": [],
+        "backend/": ["api-gateway/", "auth-service/", "user-service/", "chat-service/", "media-service/", "call-service/", "notification-service/", "group-service/", "status-service/", "admin-service/"],
+        "infrastructure/": ["docker/", "terraform/", "k8s/"],
+        "documentation/": ["requirements/", "architecture/", "api/", "testing/"]
+      },
+      "note": "Placing docs/architecture/ARCHITECTURE.md at a fixed path lets every agent task reference the architecture as a stable planning input, and lets Antigravity's knowledge base index it once and reuse it across tasks."
+    },
+    "agentManagerWaves": [
+      { "wave": "0 — Foundations", "tasks": ["Repo scaffolding", "Terraform base VPC/RDS/S3", "CI pipeline skeleton", "Shared OpenAPI contracts"], "dependsOn": [] },
+      { "wave": "1 — Platform services", "tasks": ["Auth Service", "User Service", "API Gateway"], "dependsOn": ["Wave 0"] },
+      { "wave": "2 — Communication core", "tasks": ["Chat Service", "Media Service", "Call Service (signaling)", "Notification Service"], "dependsOn": ["Wave 1 (auth contracts)"] },
+      { "wave": "3 — Battery-Aware System", "tasks": ["Android Battery Monitor Module", "battery_events schema & Call Service integration", "Client state machine (Section 5)"], "dependsOn": ["Wave 2 (Call Service)"] },
+      { "wave": "4 — Social features", "tasks": ["Group Service", "Status Service", "Android chat/UI screens"], "dependsOn": ["Wave 2"] },
+      { "wave": "5 — Admin & hardening", "tasks": ["Admin Service", "Abuse pipeline", "E2EE for chat", "Security review agent pass"], "dependsOn": ["Wave 2-4"] },
+      { "wave": "6 — Verification & release", "tasks": ["End-to-end test agent", "Battery test scenarios", "Play Store packaging"], "dependsOn": ["All prior waves"] }
+    ],
+    "skillFiles": [
+      { "path": ".antigravity/skills/spring-service/SKILL.md", "purpose": "Standard structure for a new Spring Boot microservice: package layout, error-handling convention, health endpoint, Dockerfile, test conventions." },
+      { "path": ".antigravity/skills/battery-state-machine/SKILL.md", "purpose": "The exact state machine and thresholds from Section 5 — prevents an agent from re-inventing battery logic differently in client vs backend." },
+      { "path": ".antigravity/skills/webrtc-signaling/SKILL.md", "purpose": "Signaling message schema (offer/answer/ICE), call-state enum, required event emissions to Kafka." },
+      { "path": ".antigravity/skills/api-contract/SKILL.md", "purpose": "Rule: every new endpoint must update its service's OpenAPI spec under docs/api/ before implementation is considered done." },
+      { "path": ".antigravity/skills/code-review/SKILL.md", "purpose": "Checklist an agent runs against its own diff before marking a task complete." }
+    ],
+    "exampleAgentTaskPrompt": {
+      "task": "Implement Call Service battery-event logging",
+      "context": ["docs/architecture/ARCHITECTURE.md, Section 5 & 6"],
+      "skill": ".antigravity/skills/spring-service/SKILL.md",
+      "steps": [
+        "Add POST /calls/{id}/battery-events endpoint per docs/api/call-service.yaml (create if missing, per api-contract skill).",
+        "Persist to battery_events table (see Section 8 schema).",
+        "Emit call.terminated.low_battery to Kafka when event_type=critical.",
+        "Write unit tests for all 6 battery test scenarios (see 62_testing_strategy_reference).",
+        "Produce an Artifact: test report + sequence diagram matching Section 5's sequence.",
+        "Do not modify Auth Service or Chat Service."
+      ]
+    },
+    "verificationArtifacts": [
+      "Task list / implementation plan Artifact, generated before code is written, checked against Sections 6/7/8",
+      "Automated test report Artifact (unit + integration), including the six battery scenarios",
+      "For UI-facing work: a browser/emulator screen-recording Artifact of the low-battery warning banner and automatic call termination end-to-end",
+      "Architecture-conformance note: which service boundaries, tables, and API contracts were touched"
+    ],
+    "modelSelectionGuidance": [
+      { "taskType": "Boilerplate service scaffolding, CRUD endpoints, Terraform modules", "recommendedModel": "Gemini 3 Flash — fast, cheap, high volume" },
+      { "taskType": "Battery state machine, WebRTC signaling, security-sensitive code, architecture-conformance review", "recommendedModel": "Gemini 3 Pro or Claude Sonnet — higher reasoning depth" },
+      { "taskType": "Cross-service integration debugging, ambiguous PRD interpretation", "recommendedModel": "Claude Sonnet — strong multi-file reasoning over long structured documents" }
+    ],
+    "buildSequence": [
+      "Open the repo as an Antigravity workspace; index docs/architecture/ARCHITECTURE.md and the PRD into the knowledge base.",
+      "Author the SKILL.md files first — they are reused by every later agent.",
+      "Run Wave 0 (foundations) as a single Editor-view session (synchronous, low risk).",
+      "Switch to the Manager surface for Waves 1-5, launching one agent per service/module in parallel.",
+      "Gate every wave on Artifact review before starting the next wave's dependents.",
+      "Run Wave 6 as a dedicated verification agent executing the full battery test matrix and success-criteria checklist before Play Store packaging."
+    ]
+  },
+
+  "12_roadmap_alignment": [
+    { "prdPhase": "Phase 1 — Planning", "duration": "1-2 weeks", "antigravityWave": "Pre-work: architecture doc + SKILL.md authoring" },
+    { "prdPhase": "Phase 2 — Authentication", "duration": "1-2 weeks", "antigravityWave": "Wave 1" },
+    { "prdPhase": "Phase 3 — Messaging", "duration": "3-4 weeks", "antigravityWave": "Wave 2 (Chat/Media/Notification)" },
+    { "prdPhase": "Phase 4 — Voice/Video Calling", "duration": "3-5 weeks", "antigravityWave": "Wave 2 (Call Service) + Wave 4 (Android call UI)" },
+    { "prdPhase": "Phase 5 — Battery Protection", "duration": "1-2 weeks", "antigravityWave": "Wave 3 (dedicated)" },
+    { "prdPhase": "Phase 6 — Testing", "duration": "2-3 weeks", "antigravityWave": "Wave 6" },
+    { "prdPhase": "Phase 7 — Production", "duration": "ongoing", "antigravityWave": "Post-Wave 6: infra deploy, monitoring, release" }
+  ],
+
+  "13_technology_stack": {
+    "mobile": ["Kotlin", "Jetpack Compose", "Clean Architecture/MVVM", "Hilt", "WebRTC SDK"],
+    "backend": ["Java 21", "Spring Boot 3", "Spring Data JPA", "Spring Cloud Gateway"],
+    "realtime": ["WebSocket (STOMP)", "WebRTC", "STUN/TURN"],
+    "database": ["PostgreSQL (system of record)", "Redis (cache/presence/live state)"],
+    "storage": ["Amazon S3", "CloudFront CDN"],
+    "eventing": ["Apache Kafka"],
+    "push": ["Firebase Cloud Messaging"],
+    "auth": ["JWT", "OTP", "optional 2FA"],
+    "infra": ["Docker", "AWS ECS/EKS", "Terraform", "GitHub Actions"],
+    "observability": ["CloudWatch", "Prometheus", "Grafana", "Sentry/Crashlytics"],
+    "buildToolchain": ["Google Antigravity (Agent Manager + Editor)", "Gemini 3 Pro/Flash", "Claude Sonnet"]
+  }
+}
