@@ -45,6 +45,28 @@ services:
       - minio_data:/data
     command: server /data --console-address ":9001"
 
+  api:
+    build:
+      context: ../backend/callora-server
+      dockerfile: Dockerfile
+    container_name: callora-api
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=callora
+      - DB_USERNAME=callora
+      - DB_PASSWORD=callora_dev_password
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
 volumes:
   postgres_data:
   redis_data:
