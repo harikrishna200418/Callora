@@ -31,7 +31,7 @@ public class User {
     @Column(unique = true, nullable = false)
     private String username;
 
-    @Column(name = "password_hash", nullable = false)
+    @Column(name = "password_hash")
     private String passwordHash;
 
     @Column(name = "full_name")
@@ -45,6 +45,9 @@ public class User {
 
     @Column(name = "online_status")
     private String onlineStatus = "OFFLINE";
+
+    @Column(name = "oauth_provider")
+    private String oauthProvider;
 
     @Column(name = "last_seen")
     private ZonedDateTime lastSeen;

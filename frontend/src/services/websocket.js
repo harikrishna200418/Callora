@@ -1,13 +1,19 @@
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client/dist/sockjs';
 
-const WS_BASE = 'http://localhost:8080';
+const WS_BASE = import.meta.env.VITE_WS_URL || window.location.origin;
 
 let stompClient = null;
 
-export function connectChat(onMessageReceived) {
+export function connectChat(token, onMessageReceived) {
   stompClient = new Client({
-    webSocketFactory: () => new SockJS(`${WS_BASE}/ws/chat`),
+    // Use SockJS fallback if needed, but modern STOMP prefers pure WS.
+    // If using SockJS:
+    webSocketFactory: () => new SockJS(`${WS_BASE}/ws`),
+    // Important: Pass JWT in Authorization header for the CONNECT frame
+    connectHeaders: {
+      Authorization: `Bearer ${token}`
+    },
     reconnectDelay: 5000,
     heartbeatIncoming: 4000,
     heartbeatOutgoing: 4000,
@@ -40,12 +46,13 @@ export function sendMessage(conversationId, message) {
   }
   stompClient.publish({
     destination: `/app/chat/${conversationId}/send`,
-    body: JSON.stringify(message),
+    body: JSON.stringify(message), // SendMessageRequest DTO format
   });
 }
 
 export function disconnectChat() {
   if (stompClient) {
     stompClient.deactivate();
+    stompClient = null;
   }
 }

@@ -14,7 +14,12 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.callora.app.domain.usecase.BatteryMonitorUseCase
 import com.callora.app.domain.usecase.CallTerminationController
+import com.callora.app.data.repository.UserSettingsRepository
+import com.callora.app.data.local.TokenManager
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -26,6 +31,12 @@ class CallForegroundService : Service() {
     @Inject
     lateinit var callTerminationController: CallTerminationController
 
+    @Inject
+    lateinit var userSettingsRepository: UserSettingsRepository
+
+    @Inject
+    lateinit var tokenManager: TokenManager
+
     private val batteryReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == Intent.ACTION_BATTERY_CHANGED) {
@@ -35,11 +46,12 @@ class CallForegroundService : Service() {
                 if (level != -1 && scale != -1) {
                     val batteryPct = (level * 100) / scale
                     
-                    // The thresholds would ideally come from the UserSettings repository
+                    val settings = userSettingsRepository.getSettingsOrDefault()
+                    
                     batteryMonitorUseCase.onBatteryChanged(
                         level = batteryPct,
-                        warningThreshold = 10,
-                        criticalThreshold = 7
+                        warningThreshold = settings.warningBatteryThreshold,
+                        criticalThreshold = settings.criticalBatteryThreshold
                     )
                 }
             }
@@ -66,6 +78,13 @@ class CallForegroundService : Service() {
         
         // Start reacting to state changes
         callTerminationController.startMonitoring()
+        
+        // Fetch latest settings from backend
+        CoroutineScope(Dispatchers.IO).launch {
+            tokenManager.getUserId()?.let { userId ->
+                userSettingsRepository.fetchSettings(userId)
+            }
+        }
 
         return START_NOT_STICKY
     }

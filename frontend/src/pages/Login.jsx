@@ -14,8 +14,8 @@ export default function Login({ onAuthSuccess }) {
     setError('')
     setLoading(true)
     try {
-      const data = await apiLogin(username, password)
-      onAuthSuccess(data.accessToken, data.refreshToken, data.username)
+      const { accessToken, refreshToken, username: responseUser, userId } = await apiLogin(username, password)
+      onAuthSuccess(accessToken, refreshToken, responseUser || username, userId)
     } catch (err) {
       setError(err.message || 'Login failed')
     } finally {

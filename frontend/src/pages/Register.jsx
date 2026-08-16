@@ -15,8 +15,8 @@ export default function Register({ onAuthSuccess }) {
     setError('')
     setLoading(true)
     try {
-      const data = await apiRegister(username, password, email)
-      onAuthSuccess(data.accessToken, data.refreshToken, data.username)
+      const { accessToken, refreshToken, username: responseUser, userId } = await apiRegister(username, password, email)
+      onAuthSuccess(accessToken, refreshToken, responseUser || username, userId)
     } catch (err) {
       setError(err.message || 'Registration failed')
     } finally {

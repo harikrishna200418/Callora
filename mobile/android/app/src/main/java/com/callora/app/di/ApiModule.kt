@@ -17,4 +17,10 @@ object ApiModule {
     fun provideAuthApi(retrofit: Retrofit): AuthApi {
         return retrofit.create(AuthApi::class.java)
     }
+
+    @Provides
+    @Singleton
+    fun provideUserSettingsApi(retrofit: Retrofit): com.callora.app.data.remote.api.UserSettingsApi {
+        return retrofit.create(com.callora.app.data.remote.api.UserSettingsApi::class.java)
+    }
 }

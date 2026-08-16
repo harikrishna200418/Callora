@@ -1,40 +1,48 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 
 spring:
   application:
     name: callora-server
 
-  # Default profile uses H2 for easy local development
+  # MySQL 8 — dev profile (local)
   datasource:
-    url: jdbc:h2:file:./data/callora;AUTO_SERVER=TRUE
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
-
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:callora}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:22701a560}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
 
   jpa:
     hibernate:
       ddl-auto: validate
     show-sql: false
+    open-in-view: false
     properties:
       hibernate:
-        format_sql: true
-        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: false
+        dialect: org.hibernate.dialect.MySQLDialect
+        type:
+          preferred_uuid_jdbc_type: CHAR
+        jdbc:
+          time_zone: UTC
 
   flyway:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
+    validate-on-migrate: true
 
   data:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
 
   servlet:
     multipart:
@@ -46,16 +54,32 @@ spring:
       write-dates-as-timestamps: false
     default-property-inclusion: non_null
 
-# JWT Configuration
+  # OAuth2 — set real credentials via env vars
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:disabled}
+            client-secret: ${GOOGLE_CLIENT_SECRET:disabled}
+            scope: openid, profile, email
+
+# JWT Configuration — never fallback in prod
 callora:
   jwt:
-    secret: ${JWT_SECRET:c2VjdXJlLWtleS1mb3ItY2FsbG9yYS1hcHAtZGV2ZWxvcG1lbnQtb25seS1jaGFuZ2UtaW4tcHJvZHVjdGlvbg==}
-    access-token-expiry: 3600000      # 1 hour
-    refresh-token-expiry: 2592000000  # 30 days
+    secret: ${JWT_SECRET:Y2FsbG9yYS1kZXYtc2VjcmV0LWtleS1taW5pbXVtLTUxMi1iaXRzLWZvci1IUzUxMi1hbGdvcml0aG0tMTIzNDU2}
+    access-token-expiry: 900000       # 15 minutes
+    refresh-token-expiry: 604800000   # 7 days
 
   otp:
     length: 6
     expiry-minutes: 5
+
+  oauth2:
+    frontend-redirect-url: ${FRONTEND_URL:http://localhost:5173}/oauth/callback
+
+  cors:
+    allowed-origins: ${FRONTEND_URL:http://localhost:5173}
 
   media:
     upload-dir: ${UPLOAD_DIR:./uploads}
@@ -66,33 +90,44 @@ callora:
     default-critical-threshold: 7
     min-allowed-threshold: 3
 
+# Actuator — health only public, full access internal
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+
 logging:
   level:
-    com.callora: DEBUG
-    org.springframework.web: INFO
-    org.hibernate.SQL: DEBUG
+    com.callora: INFO
+    org.springframework.web: WARN
+    org.hibernate.SQL: WARN
 
 ---
-# Production profile
+# Production profile — ALL secrets must come from env vars
 spring:
   config:
     activate:
       on-profile: prod
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:callora}
-    username: ${DB_USERNAME:callora}
-    password: ${DB_PASSWORD:callora}
-    driver-class-name: org.postgresql.Driver
-
-  h2:
-    console:
-      enabled: false
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT:3306}/${DB_NAME}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
 
   jpa:
+    show-sql: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+        dialect: org.hibernate.dialect.MySQLDialect
 
   flyway:
-    locations: classpath:db/migration/postgresql
+    locations: classpath:db/migration
+
+logging:
+  level:
+    com.callora: WARN
+    org.springframework: WARN
