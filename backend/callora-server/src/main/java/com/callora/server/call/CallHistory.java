@@ -20,7 +20,6 @@ import java.util.UUID;
 public class CallHistory {
 
     @Id
-    @Column(name = "id", columnDefinition = "CHAR(36)")
     @Builder.Default
     private UUID id = UUID.randomUUID();
 
@@ -45,7 +44,7 @@ public class CallHistory {
     @Column(name = "termination_reason", length = 30)
     private TerminationReason terminationReason;
 
-    @Column(name = "battery_level_at_end", columnDefinition = "INT")
+    @Column(name = "battery_level_at_end")
     private Integer batteryLevelAtEnd;
 
     @Column(name = "started_at")

@@ -5,12 +5,12 @@ spring:
   application:
     name: callora-server
 
-  # MySQL 8 — dev profile (local)
+  # PostgreSQL dev profile (local)
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:callora}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:22701a560}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:callora}
+    username: ${DB_USERNAME:callora}
+    password: ${DB_PASSWORD:callora_dev_password}
+    driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
       minimum-idle: 2
@@ -26,9 +26,7 @@ spring:
     properties:
       hibernate:
         format_sql: false
-        dialect: org.hibernate.dialect.MySQLDialect
-        type:
-          preferred_uuid_jdbc_type: CHAR
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         jdbc:
           time_zone: UTC
 
@@ -54,7 +52,7 @@ spring:
       write-dates-as-timestamps: false
     default-property-inclusion: non_null
 
-  # OAuth2 — set real credentials via env vars
+  # OAuth2 set real credentials via env vars
   security:
     oauth2:
       client:
@@ -64,7 +62,7 @@ spring:
             client-secret: ${GOOGLE_CLIENT_SECRET:disabled}
             scope: openid, profile, email
 
-# JWT Configuration — never fallback in prod
+# JWT Configuration never fallback in prod
 callora:
   jwt:
     secret: ${JWT_SECRET:Y2FsbG9yYS1kZXYtc2VjcmV0LWtleS1taW5pbXVtLTUxMi1iaXRzLWZvci1IUzUxMi1hbGdvcml0aG0tMTIzNDU2}
@@ -90,7 +88,7 @@ callora:
     default-critical-threshold: 7
     min-allowed-threshold: 3
 
-# Actuator — health only public, full access internal
+# Actuator health only public, full access internal
 management:
   endpoints:
     web:
@@ -107,14 +105,14 @@ logging:
     org.hibernate.SQL: WARN
 
 ---
-# Production profile — ALL secrets must come from env vars
+# Production profile ALL secrets must come from env vars
 spring:
   config:
     activate:
       on-profile: prod
 
   datasource:
-    url: jdbc:mysql://${DB_HOST}:${DB_PORT:3306}/${DB_NAME}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT:5432}/${DB_NAME}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
@@ -122,7 +120,7 @@ spring:
     show-sql: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
   flyway:
     locations: classpath:db/migration

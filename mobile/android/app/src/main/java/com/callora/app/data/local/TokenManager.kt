@@ -30,6 +30,11 @@ class TokenManager @Inject constructor(@ApplicationContext context: Context) {
         return prefs.getString(REFRESH_TOKEN_KEY, null)
     }
 
+    fun getUserId(): String? {
+        return prefs.getString("USER_ID", "me") // fallback to 'me' if not found
+    }
+
+
     fun clearTokens() {
         prefs.edit().clear().apply()
     }

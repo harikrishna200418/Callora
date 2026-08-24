@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.asSharedFlow
 import okhttp3.OkHttpClient
 import org.hildan.krossbow.stomp.StompClient
 import org.hildan.krossbow.stomp.StompSession
+import org.hildan.krossbow.stomp.sendText
+import org.hildan.krossbow.stomp.subscribeText
 import org.hildan.krossbow.websocket.okhttp.OkHttpWebSocketClient
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -56,7 +58,8 @@ class SignalingClient @Inject constructor(
             val subscription = s.subscribeText("/user/queue/signaling")
             try {
                 subscription.collect { frame ->
-                    val message = gson.fromJson(frame, SignalingMessage::class.java)
+                    val payloadStr: String = if (frame is String) frame as String else frame.toString()
+                    val message = gson.fromJson(payloadStr, SignalingMessage::class.java)
                     Log.d(TAG, "Received message: \${message.type}")
                     _messages.emit(message)
                 }

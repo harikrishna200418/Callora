@@ -6,11 +6,21 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import dagger.hilt.android.AndroidEntryPoint
+import com.callora.app.presentation.auth.LoginScreen
+import com.callora.app.presentation.calling.CallScreen
+import com.callora.app.presentation.chat.ChatScreen
+import com.callora.app.presentation.home.HomeNavigation
 import com.callora.app.presentation.theme.CalloraTheme
+import dagger.hilt.android.AndroidEntryPoint
+
+sealed class Screen {
+    object Login : Screen()
+    object Home : Screen()
+    data class Chat(val contactName: String) : Screen()
+    data class Call(val contactName: String, val callId: String, val recipientId: String, val isCaller: Boolean) : Screen()
+}
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -31,6 +41,60 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AppNavigation() {
-    // Navigation setup will go here
-    Text(text = "Callora: Battery-Aware Communication")
+    var currentScreen by remember { mutableStateOf<Screen>(Screen.Login) }
+
+    when (val screen = currentScreen) {
+        is Screen.Login -> {
+            LoginScreen(
+                onLoginSuccess = {
+                    currentScreen = Screen.Home
+                }
+            )
+        }
+        is Screen.Home -> {
+            HomeNavigation(
+                onOpenChat = { contactName ->
+                    currentScreen = Screen.Chat(contactName)
+                },
+                onStartCall = { contactName ->
+                    currentScreen = Screen.Call(
+                        contactName = contactName,
+                        callId = "call-${System.currentTimeMillis()}",
+                        recipientId = "user-2",
+                        isCaller = true
+                    )
+                },
+                onLogout = {
+                    currentScreen = Screen.Login
+                }
+            )
+        }
+        is Screen.Chat -> {
+            ChatScreen(
+                contactName = screen.contactName,
+                onBack = {
+                    currentScreen = Screen.Home
+                },
+                onStartCall = {
+                    currentScreen = Screen.Call(
+                        contactName = screen.contactName,
+                        callId = "call-${System.currentTimeMillis()}",
+                        recipientId = "user-2",
+                        isCaller = true
+                    )
+                }
+            )
+        }
+        is Screen.Call -> {
+            CallScreen(
+                contactName = screen.contactName,
+                callId = screen.callId,
+                recipientId = screen.recipientId,
+                isCaller = screen.isCaller,
+                onEndCall = {
+                    currentScreen = Screen.Home
+                }
+            )
+        }
+    }
 }

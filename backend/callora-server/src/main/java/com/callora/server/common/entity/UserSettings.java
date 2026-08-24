@@ -17,6 +17,7 @@ public class UserSettings {
     @Column(name = "user_id")
     private UUID userId;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId
     @JoinColumn(name = "user_id")

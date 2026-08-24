@@ -61,8 +61,10 @@ class CallForegroundService : Service() {
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
-        callTerminationController.onCallTerminated = {
-            stopSelf()
+        CoroutineScope(Dispatchers.Main).launch {
+            callTerminationController.terminationEvents.collect {
+                stopSelf()
+            }
         }
     }
 

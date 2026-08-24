@@ -138,6 +138,19 @@ fun LoginScreen(
                     }
                 }
 
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedButton(
+                    onClick = { onLoginSuccess() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White.copy(alpha = 0.85f))
+                ) {
+                    Text("Explore App (Demo Mode)", fontSize = 15.sp)
+                }
+
                 if (authState is AuthState.Error) {
                     Text(
                         text = (authState as AuthState.Error).message,

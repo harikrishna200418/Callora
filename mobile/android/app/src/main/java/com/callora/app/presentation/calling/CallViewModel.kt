@@ -41,9 +41,6 @@ class CallViewModel @Inject constructor(
     private val _remoteVideoTrack = MutableStateFlow<VideoTrack?>(null)
     val remoteVideoTrack: StateFlow<VideoTrack?> = _remoteVideoTrack.asStateFlow()
 
-    private val _remoteVideoEnabled = MutableStateFlow(true)
-    val remoteVideoEnabled: StateFlow<Boolean> = _remoteVideoEnabled.asStateFlow()
-
     private val _batteryWarning = MutableStateFlow<String?>(null)
     val batteryWarning: StateFlow<String?> = _batteryWarning.asStateFlow()
 
@@ -81,11 +78,11 @@ class CallViewModel @Inject constructor(
     }
 
     private fun setupBatteryMonitoring() {
-        callTerminationController.onCallTerminated = {
-            _batteryWarning.value = "Call terminated due to critical battery."
-            endCall()
-            
-            viewModelScope.launch {
+        viewModelScope.launch {
+            callTerminationController.terminationEvents.collect {
+                _batteryWarning.value = "Call terminated due to critical battery."
+                endCall()
+                
                 signalingClient.sendMessage(
                     SignalingMessage(
                         type = "CALL_TERMINATED",
@@ -97,6 +94,13 @@ class CallViewModel @Inject constructor(
                 )
             }
         }
+
+        viewModelScope.launch {
+            callTerminationController.warningEvents.collect {
+                _batteryWarning.value = "Low battery warning! Call will drop soon."
+            }
+        }
+        
         callTerminationController.startMonitoring()
     }
 
@@ -137,28 +141,9 @@ class CallViewModel @Inject constructor(
                 val candidate = IceCandidate(sdpMid, sdpMLineIndex, sdp)
                 webRTCClient.addRemoteIceCandidate(candidate)
             }
-            "VIDEO_STATE_CHANGED" -> {
-                val isVideoEnabled = msg.payload?.get("enabled") as? Boolean ?: return
-                _remoteVideoEnabled.value = isVideoEnabled
-            }
             "CALL_TERMINATED", "CALL_ENDED" -> {
                 endCall()
             }
-        }
-    }
-
-    fun toggleVideo(enabled: Boolean) {
-        webRTCClient.localVideoTrack?.setEnabled(enabled)
-        viewModelScope.launch {
-            signalingClient.sendMessage(
-                SignalingMessage(
-                    type = "VIDEO_STATE_CHANGED",
-                    callId = currentCallId,
-                    senderId = myUserId,
-                    recipientId = remoteUserId,
-                    payload = mapOf("enabled" to enabled)
-                )
-            )
         }
     }
 

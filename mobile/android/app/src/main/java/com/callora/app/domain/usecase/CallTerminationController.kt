@@ -10,6 +10,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 
 @Singleton
 class CallTerminationController @Inject constructor(
@@ -19,7 +21,11 @@ class CallTerminationController @Inject constructor(
     private val scope = CoroutineScope(Dispatchers.Main + Job())
     private var monitorJob: Job? = null
 
-    var onCallTerminated: (() -> Unit)? = null
+    private val _terminationEvents = MutableSharedFlow<Unit>()
+    val terminationEvents = _terminationEvents.asSharedFlow()
+
+    private val _warningEvents = MutableSharedFlow<Unit>()
+    val warningEvents = _warningEvents.asSharedFlow()
 
     fun startMonitoring() {
         monitorJob?.cancel()
@@ -40,14 +46,15 @@ class CallTerminationController @Inject constructor(
 
     private fun showWarning() {
         Log.w("CallTerminationCtrl", "Low Battery Warning: Displaying banner to user.")
-        // In a full implementation, this triggers a UI event to show the banner
+        scope.launch {
+            _warningEvents.emit(Unit)
+        }
     }
 
     private fun terminateCall() {
         Log.e("CallTerminationCtrl", "CRITICAL BATTERY REACHED: Automatically terminating call.")
-        // 1. Release Camera & Mic
-        // 2. Close WebRTC PeerConnection
-        // 3. Stop Foreground Service
-        onCallTerminated?.invoke()
+        scope.launch {
+            _terminationEvents.emit(Unit)
+        }
     }
 }

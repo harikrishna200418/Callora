@@ -4,7 +4,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,17 +17,41 @@ data class ChatMessage(val text: String, val isMine: Boolean)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatScreen(contactName: String) {
+fun ChatScreen(
+    contactName: String,
+    onBack: () -> Unit = {},
+    onStartCall: () -> Unit = {}
+) {
     var messageText by remember { mutableStateOf("") }
-    val messages = remember { mutableStateListOf<ChatMessage>() }
+    val messages = remember {
+        mutableStateListOf(
+            ChatMessage("Hey! Are we still on for the sync?", false),
+            ChatMessage("Yes! Callora's battery-aware mode is enabled.", true)
+        )
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(contactName) },
+                title = { 
+                    Column {
+                        Text(contactName, style = MaterialTheme.typography.titleMedium)
+                        Text("Online · Eco-Mode Active", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onStartCall) {
+                        Icon(Icons.Filled.Videocam, contentDescription = "Video Call")
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             )
         },

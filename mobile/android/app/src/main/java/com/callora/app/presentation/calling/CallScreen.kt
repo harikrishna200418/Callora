@@ -32,7 +32,6 @@ fun CallScreen(
 ) {
     val localVideoTrack by viewModel.localVideoTrack.collectAsState()
     val remoteVideoTrack by viewModel.remoteVideoTrack.collectAsState()
-    val remoteVideoEnabled by viewModel.remoteVideoEnabled.collectAsState()
     val batteryWarningText by viewModel.batteryWarning.collectAsState()
     val callEnded by viewModel.callEnded.collectAsState()
 
@@ -54,45 +53,24 @@ fun CallScreen(
             .background(Color.Black)
     ) {
         // Remote Video
-        if (remoteVideoEnabled) {
-            remoteVideoTrack?.let { track ->
-                AndroidView(
-                    factory = { context ->
-                        SurfaceViewRenderer(context).apply {
-                            init(com.callora.app.data.remote.WebRTCClient(context).eglBaseContext, null)
-                            setEnableHardwareScaler(true)
-                            setMirror(false)
-                            track.addSink(this)
-                        }
-                    },
-                    modifier = Modifier.fillMaxSize()
-                )
-            } ?: run {
-                Text(
-                    text = "Connecting to $contactName...",
-                    color = Color.White,
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            }
-        } else {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.VideocamOff,
-                    contentDescription = "Video Disabled",
-                    tint = Color.Gray,
-                    modifier = Modifier.size(64.dp)
-                )
-                Text(
-                    text = "$contactName paused their video",
-                    color = Color.Gray,
-                    modifier = Modifier.padding(top = 80.dp)
-                )
-            }
+        remoteVideoTrack?.let { track ->
+            AndroidView(
+                factory = { context ->
+                    SurfaceViewRenderer(context).apply {
+                        init(com.callora.app.data.remote.WebRTCClient(context).eglBaseContext, null)
+                        setEnableHardwareScaler(true)
+                        setMirror(false)
+                        track.addSink(this)
+                    }
+                },
+                modifier = Modifier.fillMaxSize()
+            )
+        } ?: run {
+            Text(
+                text = "Connecting to $contactName...",
+                color = Color.White,
+                modifier = Modifier.align(Alignment.Center)
+            )
         }
 
         // Local Video (PIP)
@@ -116,7 +94,7 @@ fun CallScreen(
         }
 
         // Battery Warning Overlay
-        if (batteryWarningText != null) {
+        batteryWarningText?.let { warningText ->
             Surface(
                 color = MaterialTheme.colorScheme.errorContainer,
                 modifier = Modifier
@@ -126,7 +104,7 @@ fun CallScreen(
                 shape = MaterialTheme.shapes.small
             ) {
                 Text(
-                    text = batteryWarningText,
+                    text = warningText,
                     color = MaterialTheme.colorScheme.onErrorContainer,
                     modifier = Modifier.padding(8.dp),
                     style = MaterialTheme.typography.bodyMedium
@@ -161,7 +139,6 @@ fun CallScreen(
             IconButton(
                 onClick = { 
                     isVideoOn = !isVideoOn
-                    viewModel.toggleVideo(isVideoOn)
                 },
                 modifier = Modifier
                     .background(Color.DarkGray, CircleShape)
