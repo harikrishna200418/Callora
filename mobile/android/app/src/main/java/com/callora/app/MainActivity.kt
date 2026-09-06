@@ -14,6 +14,9 @@ import com.callora.app.presentation.chat.ChatScreen
 import com.callora.app.presentation.home.HomeNavigation
 import com.callora.app.presentation.theme.CalloraTheme
 import dagger.hilt.android.AndroidEntryPoint
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 
 sealed class Screen {
     object Login : Screen()
@@ -42,6 +45,21 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavigation() {
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Login) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        // Handle permission results if needed
+    }
+
+    LaunchedEffect(Unit) {
+        permissionLauncher.launch(
+            arrayOf(
+                Manifest.permission.RECORD_AUDIO,
+                Manifest.permission.CAMERA
+            )
+        )
+    }
 
     when (val screen = currentScreen) {
         is Screen.Login -> {

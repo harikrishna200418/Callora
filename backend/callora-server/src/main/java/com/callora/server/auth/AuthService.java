@@ -3,6 +3,9 @@ package com.callora.server.auth;
 import com.callora.server.auth.dto.AuthResponse;
 import com.callora.server.auth.dto.LoginRequest;
 import com.callora.server.auth.dto.RegisterRequest;
+import com.callora.server.auth.dto.OtpRequest;
+import com.callora.server.auth.dto.OtpVerifyRequest;
+import com.callora.server.auth.dto.OtpResponse;
 import com.callora.server.auth.security.CustomUserDetails;
 import com.callora.server.auth.security.JwtService;
 import com.callora.server.common.entity.User;
@@ -14,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
+
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,10 +26,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class AuthService {
 
     private final UserRepository userRepository;
@@ -38,6 +44,9 @@ public class AuthService {
 
     @Value("${callora.jwt.refresh-token-expiry:604800000}")
     private long refreshTokenExpiry;
+
+    // In-memory OTP storage for demonstration/development
+    private final Map<String, String> otpStorage = new ConcurrentHashMap<>();
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -118,6 +127,75 @@ public class AuthService {
             token.setRevoked(true);
             refreshTokenRepository.save(token);
         });
+    }
+
+    public OtpResponse requestOtp(OtpRequest request) {
+        String phone = request.getPhoneNumber();
+        // Generate a 6-digit OTP
+        String otp = String.format("%06d", new java.util.Random().nextInt(999999));
+        
+        // Store the OTP
+        otpStorage.put(phone, otp);
+        
+        // Log it to the console (simulating SMS gateway)
+        log.info("=========================================");
+        log.info("SMS GATEWAY SIMULATOR");
+        log.info("Sending OTP {} to {}", otp, phone);
+        log.info("=========================================");
+
+        return OtpResponse.builder()
+                .success(true)
+                .message("OTP sent successfully")
+                .build();
+    }
+
+    @Transactional
+    public AuthResponse verifyOtp(OtpVerifyRequest request) {
+        String phone = request.getPhoneNumber();
+        String code = request.getCode();
+
+        String storedOtp = otpStorage.get(phone);
+        if (storedOtp == null || !storedOtp.equals(code)) {
+            throw new IllegalArgumentException("Invalid or expired OTP");
+        }
+
+        // Clear OTP
+        otpStorage.remove(phone);
+
+        // Find existing user or create a new one (Implicit Registration)
+        User user = userRepository.findByPhone(phone).orElseGet(() -> {
+            log.info("Creating new user for phone: {}", phone);
+            String tempUsername = "user_" + UUID.randomUUID().toString().substring(0, 8);
+            
+            User newUser = User.builder()
+                    .username(tempUsername)
+                    .passwordHash(passwordEncoder.encode(UUID.randomUUID().toString())) // Random password
+                    .phone(phone)
+                    .onlineStatus("ONLINE")
+                    .build();
+                    
+            newUser = userRepository.save(newUser);
+            
+            UserSettings settings = UserSettings.builder()
+                    .user(newUser)
+                    .batteryProtectionEnabled(true)
+                    .automaticCallEndEnabled(true)
+                    .criticalBatteryThreshold(7)
+                    .warningBatteryThreshold(10)
+                    .readReceiptsEnabled(true)
+                    .lastSeenVisibility("EVERYONE")
+                    .profileVisibility("EVERYONE")
+                    .build();
+            userSettingsRepository.save(settings);
+            
+            return newUser;
+        });
+
+        user.setOnlineStatus("ONLINE");
+        userRepository.save(user);
+
+        log.info("User logged in via OTP: {}", user.getUsername());
+        return buildAuthResponse(user);
     }
 
     private AuthResponse buildAuthResponse(User user) {

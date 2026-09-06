@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @Configuration
+@SuppressWarnings("null")
 public class CorsConfig {
 
     @Value("${callora.cors.allowed-origins:http://localhost:5173}")

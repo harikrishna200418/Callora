@@ -12,7 +12,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -26,6 +28,10 @@ fun LoginScreen(
 ) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var phoneNumber by remember { mutableStateOf("") }
+    var otpCode by remember { mutableStateOf("") }
+    var isPhoneAuth by remember { mutableStateOf(false) }
+    
     val authState by viewModel.authState.collectAsState()
 
     // Liquid Animation State
@@ -94,48 +100,115 @@ fun LoginScreen(
                     modifier = Modifier.padding(bottom = 32.dp)
                 )
 
-                OutlinedTextField(
-                    value = username,
-                    onValueChange = { username = it },
-                    label = { Text("Username", color = Color.White.copy(alpha = 0.7f)) },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF4ADE80),
-                        unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White
-                    ),
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                    shape = RoundedCornerShape(16.dp)
-                )
-
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = { Text("Password", color = Color.White.copy(alpha = 0.7f)) },
-                    visualTransformation = PasswordVisualTransformation(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF4ADE80),
-                        unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White
-                    ),
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp),
-                    shape = RoundedCornerShape(16.dp)
-                )
-
-                Button(
-                    onClick = { viewModel.login(LoginRequest(username, password)) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4ADE80))
-                ) {
-                    if (authState is AuthState.Loading) {
-                        CircularProgressIndicator(color = Color.Black, modifier = Modifier.size(24.dp))
+                if (isPhoneAuth) {
+                    if (authState is AuthState.OtpSent) {
+                        OutlinedTextField(
+                            value = otpCode,
+                            onValueChange = { otpCode = it },
+                            label = { Text("Enter 6-digit OTP", color = Color.White.copy(alpha = 0.7f)) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFF4ADE80),
+                                unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White
+                            ),
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp),
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        
+                        Button(
+                            onClick = { viewModel.verifyOtp(phoneNumber, otpCode) },
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4ADE80))
+                        ) {
+                            if (authState is AuthState.Loading) {
+                                CircularProgressIndicator(color = Color.Black, modifier = Modifier.size(24.dp))
+                            } else {
+                                Text("Verify OTP", color = Color.Black, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
                     } else {
-                        Text("Flow In", color = Color.Black, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        OutlinedTextField(
+                            value = phoneNumber,
+                            onValueChange = { phoneNumber = it },
+                            label = { Text("Phone Number", color = Color.White.copy(alpha = 0.7f)) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFF4ADE80),
+                                unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White
+                            ),
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp),
+                            shape = RoundedCornerShape(16.dp)
+                        )
+
+                        Button(
+                            onClick = { viewModel.requestOtp(phoneNumber) },
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4ADE80))
+                        ) {
+                            if (authState is AuthState.Loading) {
+                                CircularProgressIndicator(color = Color.Black, modifier = Modifier.size(24.dp))
+                            } else {
+                                Text("Send OTP", color = Color.Black, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
                     }
+                } else {
+                    OutlinedTextField(
+                        value = username,
+                        onValueChange = { username = it },
+                        label = { Text("Username", color = Color.White.copy(alpha = 0.7f)) },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF4ADE80),
+                            unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        ),
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                        shape = RoundedCornerShape(16.dp)
+                    )
+
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        label = { Text("Password", color = Color.White.copy(alpha = 0.7f)) },
+                        visualTransformation = PasswordVisualTransformation(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF4ADE80),
+                            unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        ),
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp),
+                        shape = RoundedCornerShape(16.dp)
+                    )
+
+                    Button(
+                        onClick = { viewModel.login(LoginRequest(username, password)) },
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4ADE80))
+                    ) {
+                        if (authState is AuthState.Loading) {
+                            CircularProgressIndicator(color = Color.Black, modifier = Modifier.size(24.dp))
+                        } else {
+                            Text("Flow In", color = Color.Black, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                TextButton(onClick = { isPhoneAuth = !isPhoneAuth }) {
+                    Text(
+                        if (isPhoneAuth) "Use Username/Password instead" else "Login with Phone Number",
+                        color = Color(0xFF4ADE80)
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))

@@ -94,15 +94,15 @@ export async function apiUpdateSettings(userId, settings) {
 }
 
 export async function apiGetContacts() {
-  const res = await authFetch('/api/contacts');
+  const res = await authFetch('/api/v1/contacts');
   if (!res.ok) throw new Error('Failed to fetch contacts');
   return res.json();
 }
 
-export async function apiAddContact(contactName, phoneNumber) {
-  const res = await authFetch('/api/contacts', {
+export async function apiAddContact(contactName, phoneNumber, email = '', notes = '') {
+  const res = await authFetch('/api/v1/contacts', {
     method: 'POST',
-    body: JSON.stringify({ contactName, phoneNumber }),
+    body: JSON.stringify({ contactName, phoneNumber, email, notes }),
   });
   if (!res.ok) {
     let msg = 'Failed to add contact';
@@ -115,6 +115,43 @@ export async function apiAddContact(contactName, phoneNumber) {
     }
     throw new Error(msg);
   }
+  return res.json();
+}
+
+export async function apiUpdateContact(contactId, contactName, phoneNumber, email = '', notes = '') {
+  const res = await authFetch(`/api/v1/contacts/${contactId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ contactName, phoneNumber, email, notes }),
+  });
+  if (!res.ok) {
+    let msg = 'Failed to update contact';
+    const text = await res.text();
+    try {
+      const data = JSON.parse(text);
+      msg = data.error || data.message || Object.values(data)[0] || msg;
+    } catch {
+      msg = text || msg;
+    }
+    throw new Error(msg);
+  }
+  return res.json();
+}
+
+export async function apiDeleteContact(contactId) {
+  const res = await authFetch(`/api/v1/contacts/${contactId}`, {
+    method: 'DELETE'
+  });
+  if (!res.ok) {
+    throw new Error('Failed to delete contact');
+  }
+  return true;
+}
+
+export async function apiGetOrCreateSmsConversation(userId, contactId) {
+  const res = await authFetch(`/api/chat/conversations/sms?userId=${userId}&contactId=${contactId}`, {
+    method: 'POST'
+  });
+  if (!res.ok) throw new Error('Failed to create SMS conversation');
   return res.json();
 }
 

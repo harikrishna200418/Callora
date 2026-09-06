@@ -28,6 +28,7 @@ public class ConversationParticipant {
     private User user;
 
     @Column(nullable = false)
+    @Builder.Default
     private String role = "MEMBER";
 
     @CreationTimestamp

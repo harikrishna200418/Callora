@@ -30,6 +30,7 @@ import org.springframework.stereotype.Controller;
 @Slf4j
 @Controller
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class CallWebSocketController {
 
     private final SimpMessagingTemplate messagingTemplate;

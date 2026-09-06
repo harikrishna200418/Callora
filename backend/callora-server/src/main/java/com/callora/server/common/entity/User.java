@@ -44,6 +44,7 @@ public class User {
     private String profilePictureUrl;
 
     @Column(name = "online_status")
+    @Builder.Default
     private String onlineStatus = "OFFLINE";
 
     @Column(name = "oauth_provider")
@@ -51,6 +52,10 @@ public class User {
 
     @Column(name = "last_seen")
     private ZonedDateTime lastSeen;
+
+    @Column(name = "verified_sender_number")
+    @Builder.Default
+    private String verifiedSenderNumber = "7569701085";
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

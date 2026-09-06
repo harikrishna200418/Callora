@@ -1,4 +1,4 @@
-package com.callora.server.user.dto;
+package com.callora.server.auth.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,9 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AddContactRequest {
-    private String contactName;
+public class OtpVerifyRequest {
     private String phoneNumber;
-    private String email;
-    private String notes;
+    private String code;
 }

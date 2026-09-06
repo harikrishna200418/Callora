@@ -8,6 +8,9 @@ import {
   apiUpdateSettings,
   apiGetContacts,
   apiAddContact,
+  apiUpdateContact,
+  apiDeleteContact,
+  apiGetOrCreateSmsConversation,
   apiInitiateVoiceCall,
   apiInitiateVideoCall,
   apiSendSms
@@ -30,7 +33,18 @@ export default function Dashboard({ onLogout }) {
   const [showAddContact, setShowAddContact] = useState(false)
   const [newContactName, setNewContactName] = useState('')
   const [newContactPhone, setNewContactPhone] = useState('')
+  const [newContactEmail, setNewContactEmail] = useState('')
+  const [newContactNotes, setNewContactNotes] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
+  
+  const [editingContact, setEditingContact] = useState(null)
+  const [editContactName, setEditContactName] = useState('')
+  const [editContactPhone, setEditContactPhone] = useState('')
+  const [editContactEmail, setEditContactEmail] = useState('')
+  const [editContactNotes, setEditContactNotes] = useState('')
+  
+  // Mobile responsive state
+  const [isMobileViewChat, setIsMobileViewChat] = useState(false)
 
   const msgEndRef = useRef(null)
   const username = localStorage.getItem('username') || 'User'
@@ -79,13 +93,44 @@ export default function Dashboard({ onLogout }) {
   const handleAddContact = async (e) => {
     e.preventDefault()
     try {
-      await apiAddContact(newContactName, newContactPhone)
+      await apiAddContact(newContactName, newContactPhone, newContactEmail, newContactNotes)
       setShowAddContact(false)
       setNewContactName('')
       setNewContactPhone('')
+      setNewContactEmail('')
+      setNewContactNotes('')
       // refresh
       const contactsData = await apiGetContacts()
       setContacts(contactsData)
+      alert("Contact saved successfully")
+    } catch (err) {
+      alert(err.message)
+    }
+  }
+
+  const handleEditContact = async (e) => {
+    e.preventDefault()
+    if (!editingContact) return
+    try {
+      await apiUpdateContact(editingContact.id, editContactName, editContactPhone, editContactEmail, editContactNotes)
+      setEditingContact(null)
+      const contactsData = await apiGetContacts()
+      setContacts(contactsData)
+      alert("Contact updated successfully")
+    } catch (err) {
+      alert(err.message)
+    }
+  }
+
+  const handleDeleteContact = async (contactId) => {
+    if (!window.confirm("Are you sure you want to delete this contact?")) return;
+    try {
+      await apiDeleteContact(contactId)
+      const contactsData = await apiGetContacts()
+      setContacts(contactsData)
+      if (selectedChat?.targetUser?.id === contactId || selectedChat?.contactId === contactId) {
+        setSelectedChat(null)
+      }
     } catch (err) {
       alert(err.message)
     }
@@ -93,14 +138,19 @@ export default function Dashboard({ onLogout }) {
 
   // Handle Contact Click to start/open chat
   const handleContactClick = async (contact) => {
-    if (!contact.targetUser) {
-      alert('This contact is not registered on Callora yet. Invite them via SMS!')
-      return;
-    }
     try {
-      // Find or create conversation
-      const conv = await apiGetOrCreateOneToOneConversation(userId, contact.targetUser.id)
-      setSelectedChat({ ...conv, targetUser: contact.targetUser, contactName: contact.contactName })
+      let conv;
+      let targetUser = contact.targetUser;
+      
+      if (!targetUser) {
+        // SMS Conversation
+        conv = await apiGetOrCreateSmsConversation(userId, contact.id);
+        setSelectedChat({ ...conv, contactId: contact.id, contactName: contact.contactName, phoneNumber: contact.phoneNumber });
+      } else {
+        // One to One Callora conversation
+        conv = await apiGetOrCreateOneToOneConversation(userId, targetUser.id)
+        setSelectedChat({ ...conv, targetUser, contactName: contact.contactName })
+      }
       
       // Load history
       const msgs = await apiGetMessages(conv.id)
@@ -112,8 +162,10 @@ export default function Dashboard({ onLogout }) {
           setMessages(prev => [...prev, newMsg])
         })
       }
+      setIsMobileViewChat(true)
     } catch (err) {
       console.error("Error opening chat", err)
+      alert(err.message)
     }
   }
 
@@ -155,8 +207,8 @@ export default function Dashboard({ onLogout }) {
   }
 
   return (
-    <div className="dashboard">
-      <aside className="sidebar">
+    <div className={`dashboard ${isMobileViewChat ? 'show-chat-mobile' : 'show-sidebar-mobile'}`}>
+      <nav className="sidebar" aria-label="Main Navigation">
         <div className="sidebar-header">
           <div className="user-avatar">
             <span className="avatar-letter">{username[0]?.toUpperCase()}</span>
@@ -188,6 +240,12 @@ export default function Dashboard({ onLogout }) {
 
         {activeTab === 'chats' && (
           <div className="contact-list-container">
+            <div className="contact-list-header">
+              <h3>Contacts</h3>
+              <button className="btn-icon" onClick={() => setShowAddContact(true)} title="Add Contact">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              </button>
+            </div>
             <div className="contact-list-actions">
               <input 
                 type="text" 
@@ -195,10 +253,8 @@ export default function Dashboard({ onLogout }) {
                 value={searchQuery} 
                 onChange={e => setSearchQuery(e.target.value)} 
                 className="search-input" 
+                aria-label="Search contacts"
               />
-              <button className="btn-icon add-contact-btn" onClick={() => setShowAddContact(true)} title="Add Contact">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-              </button>
             </div>
             <div className="contact-list">
               {contacts.length === 0 && <p className="text-muted" style={{padding: '1rem'}}>No contacts found.</p>}
@@ -206,16 +262,36 @@ export default function Dashboard({ onLogout }) {
                 <div
                   key={c.id}
                   className={`contact-item ${selectedChat?.targetUser?.id === c.targetUser?.id && selectedChat ? 'active' : ''}`}
-                  onClick={() => handleContactClick(c)}
                 >
-                  <div className="contact-avatar">
+                  <div className="contact-avatar" onClick={() => handleContactClick(c)}>
                     <span>{c.contactName[0].toUpperCase()}</span>
                     {c.targetUser && <span className={`status-dot ${c.targetUser.onlineStatus === 'ONLINE' ? 'online' : 'offline'}`} />}
                   </div>
                   <div className="contact-info">
-                    <div className="contact-row">
+                    <div className="contact-row" onClick={() => handleContactClick(c)}>
                       <span className="contact-name">{c.contactName}</span>
                     </div>
+                    <div className="contact-row text-muted" onClick={() => handleContactClick(c)} style={{fontSize: '0.8rem'}}>
+                      {c.phoneNumber}
+                    </div>
+                  </div>
+                  <div className="contact-actions">
+                    <button className="btn-icon-small" onClick={(e) => { e.stopPropagation(); handleContactClick(c); }} title="Message">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                    </button>
+                    <button className="btn-icon-small" onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingContact(c);
+                      setEditContactName(c.contactName);
+                      setEditContactPhone(c.phoneNumber);
+                      setEditContactEmail(c.email || '');
+                      setEditContactNotes(c.notes || '');
+                    }} title="Edit">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                    </button>
+                    <button className="btn-icon-small delete" onClick={(e) => { e.stopPropagation(); handleDeleteContact(c.id); }} title="Delete">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                    </button>
                   </div>
                 </div>
               ))}
@@ -258,19 +334,25 @@ export default function Dashboard({ onLogout }) {
             </div>
           </div>
         )}
-      </aside>
+      </nav>
 
       <main className="chat-area">
         {selectedChat ? (
           <>
             <header className="chat-header glass-card">
               <div className="chat-header-left">
-                <div className="contact-avatar sm">
-                  <span>{selectedChat.contactName?.[0]?.toUpperCase() || selectedChat.targetUser.username[0].toUpperCase()}</span>
-                  <span className={`status-dot ${selectedChat.targetUser.onlineStatus === 'ONLINE' ? 'online' : 'offline'}`} />
-                </div>
-                <div>
-                  <h3>{selectedChat.contactName || selectedChat.targetUser.fullName || selectedChat.targetUser.username}</h3>
+                <button 
+                  className="btn-icon mobile-back-btn" 
+                  onClick={() => setIsMobileViewChat(false)}
+                  aria-label="Back to contacts"
+                  title="Back"
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                </button>
+                <div className="chat-header-info">
+                  <h3>{selectedChat.contactName}</h3>
+                  <p className="text-muted" style={{fontSize: '0.8rem'}}>To: {selectedChat.phoneNumber || selectedChat.targetUser?.phoneNumber}</p>
+                  <p className="text-muted" style={{fontSize: '0.8rem'}}>From: {settings?.verifiedSenderNumber || '7569701085'}</p>
                 </div>
               </div>
               <div className="chat-header-actions">
@@ -292,11 +374,19 @@ export default function Dashboard({ onLogout }) {
                   <p className="text-muted">Send a message to start the conversation 💬</p>
                 </div>
               )}
-              {messages.map(m => (
-                <div key={m.id} className={`message ${m.senderId === userId ? 'mine' : 'theirs'}`}>
-                  <div className="message-bubble">
-                    <p>{m.content}</p>
-                    <span className="message-time">{new Date(m.sentAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+              {messages.map((msg, idx) => (
+                <div 
+                  key={idx} 
+                  className={`message-bubble ${msg.senderId === userId ? 'sent' : 'received'}`}
+                >
+                  <div className="message-content">{msg.content}</div>
+                  <div className="message-meta">
+                    {new Date(msg.sentAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    {msg.senderId === userId && (
+                      <span className="message-status">
+                        {msg.status === 'SENT' ? '✓' : msg.status === 'DELIVERED' ? '✓✓' : msg.status === 'FAILED' ? '!' : ''}
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}
@@ -310,7 +400,11 @@ export default function Dashboard({ onLogout }) {
                 placeholder="Type a message..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
+                maxLength={160}
               />
+              <div className="char-counter" style={{fontSize: '0.7rem', color: '#888', alignSelf: 'center', marginRight: '10px'}}>
+                {input.length}/160
+              </div>
               <button type="submit" className="btn-send" disabled={!input.trim()}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
               </button>
@@ -343,13 +437,31 @@ export default function Dashboard({ onLogout }) {
                 />
               </div>
               <div className="form-group">
-                <label>Phone Number</label>
+                <label>Phone Number *</label>
                 <input 
                   type="text" 
                   value={newContactPhone} 
                   onChange={e => setNewContactPhone(e.target.value)} 
                   required 
                   className="auth-input"
+                />
+              </div>
+              <div className="form-group">
+                <label>Email (Optional)</label>
+                <input 
+                  type="email" 
+                  value={newContactEmail} 
+                  onChange={e => setNewContactEmail(e.target.value)} 
+                  className="auth-input"
+                />
+              </div>
+              <div className="form-group">
+                <label>Notes (Optional)</label>
+                <textarea 
+                  value={newContactNotes} 
+                  onChange={e => setNewContactNotes(e.target.value)} 
+                  className="auth-input"
+                  rows="2"
                 />
               </div>
               <div className="modal-actions">
@@ -360,6 +472,72 @@ export default function Dashboard({ onLogout }) {
           </div>
         </div>
       )}
+      
+      {editingContact && (
+        <div className="modal-overlay">
+          <div className="modal-content glass-card">
+            <h3>Edit Contact</h3>
+            <form onSubmit={handleEditContact}>
+              <div className="form-group">
+                <label>Name *</label>
+                <input 
+                  type="text" 
+                  value={editContactName} 
+                  onChange={e => setEditContactName(e.target.value)} 
+                  required 
+                  className="auth-input"
+                />
+              </div>
+              <div className="form-group">
+                <label>Phone Number *</label>
+                <input 
+                  type="text" 
+                  value={editContactPhone} 
+                  onChange={e => setEditContactPhone(e.target.value)} 
+                  required 
+                  className="auth-input"
+                />
+              </div>
+              <div className="form-group">
+                <label>Email (Optional)</label>
+                <input 
+                  type="email" 
+                  value={editContactEmail} 
+                  onChange={e => setEditContactEmail(e.target.value)} 
+                  className="auth-input"
+                />
+              </div>
+              <div className="form-group">
+                <label>Notes (Optional)</label>
+                <textarea 
+                  value={editContactNotes} 
+                  onChange={e => setEditContactNotes(e.target.value)} 
+                  className="auth-input"
+                  rows="2"
+                />
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="btn-secondary" onClick={() => setEditingContact(null)}>Cancel</button>
+                <button type="submit" className="btn-primary">Save Changes</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      
+      {/* Floating Action Button */}
+      <button 
+        className="fab-add-contact" 
+        onClick={() => setShowAddContact(true)}
+        aria-label="Add new contact"
+        title="Add new contact"
+        tabIndex="0"
+      >
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+      </button>
     </div>
   )
 }

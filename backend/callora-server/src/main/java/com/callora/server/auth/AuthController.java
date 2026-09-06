@@ -4,6 +4,9 @@ import com.callora.server.auth.dto.AuthResponse;
 import com.callora.server.auth.dto.LoginRequest;
 import com.callora.server.auth.dto.RefreshTokenRequest;
 import com.callora.server.auth.dto.RegisterRequest;
+import com.callora.server.auth.dto.OtpRequest;
+import com.callora.server.auth.dto.OtpVerifyRequest;
+import com.callora.server.auth.dto.OtpResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -38,5 +41,15 @@ public class AuthController {
     public ResponseEntity<Void> logout(@Valid @RequestBody RefreshTokenRequest request) {
         authService.logout(request.getRefreshToken());
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/otp/request")
+    public ResponseEntity<OtpResponse> requestOtp(@Valid @RequestBody OtpRequest request) {
+        return ResponseEntity.ok(authService.requestOtp(request));
+    }
+
+    @PostMapping("/otp/verify")
+    public ResponseEntity<AuthResponse> verifyOtp(@Valid @RequestBody OtpVerifyRequest request) {
+        return ResponseEntity.ok(authService.verifyOtp(request));
     }
 }

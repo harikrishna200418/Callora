@@ -18,6 +18,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.hilt.navigation.compose.hiltViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 data class ChatPreview(
     val id: String,
@@ -42,7 +48,8 @@ data class CallHistoryItem(
 fun HomeNavigation(
     onOpenChat: (String) -> Unit = {},
     onStartCall: (String) -> Unit = {},
-    onLogout: () -> Unit = {}
+    onLogout: () -> Unit = {},
+    viewModel: HomeViewModel = hiltViewModel()
 ) {
     var selectedItem by remember { mutableIntStateOf(0) }
     val items = listOf("Chats", "Calls", "Battery Hub")
@@ -110,7 +117,16 @@ fun HomeNavigation(
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
             when (selectedItem) {
-                0 -> ChatsTab(onOpenChat = onOpenChat)
+                0 -> {
+                    val chats by viewModel.chats.collectAsState()
+                    val isRefreshing by viewModel.isRefreshing.collectAsState()
+                    ChatsTab(
+                        chats = chats,
+                        isRefreshing = isRefreshing,
+                        onRefresh = { viewModel.refreshChats() },
+                        onOpenChat = onOpenChat
+                    )
+                }
                 1 -> CallsTab(onStartCall = onStartCall)
                 2 -> ProfileTab(onLogout = onLogout)
             }
@@ -118,31 +134,44 @@ fun HomeNavigation(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatsTab(onOpenChat: (String) -> Unit) {
-    val sampleChats = remember {
-        listOf(
-            ChatPreview("1", "Alex Carter", "Video call saved 45% battery today!", "10:14 AM", 2, true),
-            ChatPreview("2", "Sarah Connor", "See you on the conference call.", "09:30 AM", 0, true),
-            ChatPreview("3", "Dev Team Lead", "Adaptive WebRTC codec deployed.", "Yesterday", 0, false),
-            ChatPreview("4", "Emma Watson", "Battery threshold alert received.", "2 days ago", 0, false)
-        )
+fun ChatsTab(
+    chats: List<ChatPreview>,
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit,
+    onOpenChat: (String) -> Unit
+) {
+    val pullToRefreshState = rememberPullToRefreshState()
+    
+    if (pullToRefreshState.isRefreshing) {
+        LaunchedEffect(true) {
+            onRefresh()
+            pullToRefreshState.endRefresh()
+        }
     }
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        item {
-            Text(
-                text = "Recent Messages",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
+    Box(modifier = Modifier.fillMaxSize().nestedScroll(pullToRefreshState.nestedScrollConnection)) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            item {
+                Text(
+                    text = "Recent Messages",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+
+        if (chats.isEmpty() && !isRefreshing) {
+            item {
+                Text("No recent messages", modifier = Modifier.padding(16.dp))
+            }
         }
 
-        items(sampleChats) { chat ->
+        items(chats) { chat ->
             Card(
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
@@ -199,6 +228,10 @@ fun ChatsTab(onOpenChat: (String) -> Unit) {
                 }
             }
         }
+        PullToRefreshContainer(
+            state = pullToRefreshState,
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
     }
 }
 

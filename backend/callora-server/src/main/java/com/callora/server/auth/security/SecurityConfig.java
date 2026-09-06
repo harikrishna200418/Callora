@@ -22,6 +22,7 @@ import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWrite
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;

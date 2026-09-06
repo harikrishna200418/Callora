@@ -28,6 +28,12 @@ public class Contact {
     @Column(name = "contact_name", length = 100)
     private String contactName;
 
+    @Column(length = 255)
+    private String email;
+
+    @Column(columnDefinition = "TEXT")
+    private String notes;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private ZonedDateTime createdAt = ZonedDateTime.now();

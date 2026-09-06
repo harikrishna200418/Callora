@@ -24,6 +24,9 @@ public class Conversation {
     @Column(nullable = false)
     private String type; // ONE_TO_ONE or GROUP
     
+    @Column(name = "contact_id")
+    private UUID contactId;
+    
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private ZonedDateTime createdAt;

@@ -8,6 +8,10 @@ data class LoginRequest(val username: String, val password: String)
 data class RegisterRequest(val username: String, val password: String, val email: String)
 data class AuthResponse(val accessToken: String, val refreshToken: String, val userId: String, val username: String)
 
+data class OtpRequest(val phoneNumber: String)
+data class OtpVerifyRequest(val phoneNumber: String, val code: String)
+data class OtpResponse(val success: Boolean, val message: String)
+
 interface AuthApi {
     
     @POST("api/auth/login")
@@ -15,4 +19,10 @@ interface AuthApi {
     
     @POST("api/auth/register")
     suspend fun register(@Body request: RegisterRequest): Response<AuthResponse>
+
+    @POST("api/auth/otp/request")
+    suspend fun requestOtp(@Body request: OtpRequest): Response<OtpResponse>
+
+    @POST("api/auth/otp/verify")
+    suspend fun verifyOtp(@Body request: OtpVerifyRequest): Response<AuthResponse>
 }

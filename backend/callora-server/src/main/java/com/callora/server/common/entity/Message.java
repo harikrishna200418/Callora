@@ -37,7 +37,17 @@ public class Message {
     private String mediaUrl;
 
     @Column(nullable = false)
-    private String status = "SENT"; // SENT, DELIVERED, READ
+    @Builder.Default
+    private String status = "SENT"; // SENT, DELIVERED, READ, FAILED
+
+    @Column(name = "sender_number", length = 20)
+    private String senderNumber;
+
+    @Column(name = "recipient_number", length = 20)
+    private String recipientNumber;
+
+    @Column(length = 20)
+    private String direction; // INCOMING, OUTGOING
 
     @CreationTimestamp
     @Column(name = "sent_at", updatable = false)

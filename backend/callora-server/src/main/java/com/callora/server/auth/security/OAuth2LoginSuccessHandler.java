@@ -20,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 
 @Component
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     private final UserRepository userRepository;
@@ -37,6 +38,11 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         String email = oAuth2User.getAttribute("email");
         String name = oAuth2User.getAttribute("name");
         String picture = oAuth2User.getAttribute("picture");
+
+        if (email == null) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "OAuth2 provider did not return an email address");
+            return;
+        }
 
         // Find existing user by email or create a new one
         User user = userRepository.findByEmail(email)

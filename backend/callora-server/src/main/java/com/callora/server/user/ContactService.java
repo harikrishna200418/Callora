@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class ContactService {
 
     private final ContactRepository contactRepository;
@@ -25,7 +26,16 @@ public class ContactService {
 
     @Transactional
     public ContactDto addContact(UUID userId, AddContactRequest request) {
-        if (contactRepository.existsByUserIdAndPhoneNumber(userId, request.getPhoneNumber())) {
+        if (request.getContactName() == null || request.getContactName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Contact name cannot be empty.");
+        }
+        if (request.getPhoneNumber() == null || request.getPhoneNumber().trim().isEmpty()) {
+            throw new IllegalArgumentException("Phone number cannot be empty.");
+        }
+
+        String normalizedPhone = request.getPhoneNumber().replaceAll("[^\\d+]", "");
+
+        if (contactRepository.existsByUserIdAndPhoneNumber(userId, normalizedPhone)) {
             throw new IllegalArgumentException("Contact with this phone number already exists.");
         }
 
@@ -33,10 +43,39 @@ public class ContactService {
         
         Contact contact = Contact.builder()
                 .user(owner)
-                .contactName(request.getContactName())
-                .phoneNumber(request.getPhoneNumber())
+                .contactName(request.getContactName().trim())
+                .phoneNumber(normalizedPhone)
+                .email(request.getEmail())
+                .notes(request.getNotes())
                 .build();
                 
+        contact = contactRepository.save(contact);
+        return toDto(contact);
+    }
+
+    @Transactional
+    public ContactDto updateContact(UUID userId, UUID contactId, AddContactRequest request) {
+        if (request.getContactName() == null || request.getContactName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Contact name cannot be empty.");
+        }
+        if (request.getPhoneNumber() == null || request.getPhoneNumber().trim().isEmpty()) {
+            throw new IllegalArgumentException("Phone number cannot be empty.");
+        }
+
+        Contact contact = contactRepository.findByIdAndUserId(contactId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("Contact not found or access denied."));
+
+        String normalizedPhone = request.getPhoneNumber().replaceAll("[^\\d+]", "");
+
+        if (!contact.getPhoneNumber().equals(normalizedPhone) && contactRepository.existsByUserIdAndPhoneNumber(userId, normalizedPhone)) {
+             throw new IllegalArgumentException("Another contact with this phone number already exists.");
+        }
+
+        contact.setContactName(request.getContactName().trim());
+        contact.setPhoneNumber(normalizedPhone);
+        contact.setEmail(request.getEmail());
+        contact.setNotes(request.getNotes());
+
         contact = contactRepository.save(contact);
         return toDto(contact);
     }
@@ -68,6 +107,8 @@ public class ContactService {
                 .targetUser(targetUser)
                 .contactName(contact.getContactName())
                 .phoneNumber(contact.getPhoneNumber())
+                .email(contact.getEmail())
+                .notes(contact.getNotes())
                 .createdAt(contact.getCreatedAt())
                 .build();
     }

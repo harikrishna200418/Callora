@@ -26,6 +26,11 @@ public class ChatController {
         return ResponseEntity.ok(chatService.getOrCreateOneToOneConversation(user1Id, user2Id));
     }
 
+    @PostMapping("/conversations/sms")
+    public ResponseEntity<Conversation> getOrCreateSmsConversation(@RequestParam UUID userId, @RequestParam UUID contactId) {
+        return ResponseEntity.ok(chatService.getOrCreateSmsConversation(userId, contactId));
+    }
+
     @GetMapping("/conversations/{conversationId}/messages")
     public ResponseEntity<List<Message>> getMessages(@PathVariable UUID conversationId) {
         return ResponseEntity.ok(chatService.getConversationMessages(conversationId));

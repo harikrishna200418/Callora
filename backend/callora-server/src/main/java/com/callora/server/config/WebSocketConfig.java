@@ -10,11 +10,12 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
 import java.util.Arrays;
-import java.util.List;
+import org.springframework.lang.NonNull;
 
 @Configuration
 @EnableWebSocketMessageBroker
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final WebSocketAuthInterceptor webSocketAuthInterceptor;
@@ -23,14 +24,14 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     private String allowedOriginsRaw;
 
     @Override
-    public void configureMessageBroker(MessageBrokerRegistry config) {
+    public void configureMessageBroker(@NonNull MessageBrokerRegistry config) {
         config.enableSimpleBroker("/topic", "/queue", "/user");
         config.setApplicationDestinationPrefixes("/app");
         config.setUserDestinationPrefix("/user");
     }
 
     @Override
-    public void registerStompEndpoints(StompEndpointRegistry registry) {
+    public void registerStompEndpoints(@NonNull StompEndpointRegistry registry) {
         String[] origins = Arrays.stream(allowedOriginsRaw.split(","))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
@@ -53,7 +54,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     }
 
     @Override
-    public void configureClientInboundChannel(ChannelRegistration registration) {
+    public void configureClientInboundChannel(@NonNull ChannelRegistration registration) {
         // Authenticate every CONNECT frame via JWT
         registration.interceptors(webSocketAuthInterceptor);
     }

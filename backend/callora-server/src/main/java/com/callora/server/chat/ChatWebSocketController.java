@@ -17,6 +17,7 @@ import java.util.UUID;
 
 @Controller
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class ChatWebSocketController {
 
     private final SimpMessagingTemplate messagingTemplate;

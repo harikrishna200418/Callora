@@ -17,6 +17,9 @@
     <application
         android:name=".CalloraApplication"
         android:allowBackup="true"
+        android:extractNativeLibs="true"
+        android:usesCleartextTraffic="true"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:icon="@android:drawable/ic_menu_call"
         android:label="Callora"
         android:roundIcon="@android:drawable/ic_menu_call"

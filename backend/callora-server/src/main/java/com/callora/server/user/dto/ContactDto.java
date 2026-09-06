@@ -18,5 +18,7 @@ public class ContactDto {
     private UserDto targetUser; // Null if user is not registered on Callora
     private String contactName;
     private String phoneNumber;
+    private String email;
+    private String notes;
     private ZonedDateTime createdAt;
 }

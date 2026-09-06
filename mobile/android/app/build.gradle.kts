@@ -8,6 +8,7 @@ plugins {
 android {
     namespace = "com.callora.app"
     compileSdk = 34
+    ndkVersion = "25.2.9519653"
 
     defaultConfig {
         applicationId = "com.callora.app"
@@ -66,7 +67,7 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
     // WebRTC
-    implementation("io.getstream:stream-webrtc-android:1.1.1")
+    implementation("io.getstream:stream-webrtc-android:1.3.10")
     
     // STOMP
     implementation("org.hildan.krossbow:krossbow-stomp-core:7.0.0")

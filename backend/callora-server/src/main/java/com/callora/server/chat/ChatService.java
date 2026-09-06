@@ -19,12 +19,16 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class ChatService {
 
     private final ConversationRepository conversationRepository;
     private final ConversationParticipantRepository participantRepository;
     private final MessageRepository messageRepository;
     private final UserService userService;
+
+    private final SmsProvider smsProvider;
+    private final com.callora.server.common.repository.ContactRepository contactRepository;
 
     public List<Conversation> getUserConversations(UUID userId) {
         return participantRepository.findByUserId(userId).stream()
@@ -66,8 +70,47 @@ public class ChatService {
                 
         return conv;
     }
+
+    @Transactional
+    public Conversation getOrCreateSmsConversation(UUID userId, UUID contactId) {
+        // Find existing SMS conversation
+        List<ConversationParticipant> userParts = participantRepository.findByUserId(userId);
+        for (ConversationParticipant p : userParts) {
+            Conversation conv = p.getConversation();
+            if ("SMS".equals(conv.getType()) && contactId.equals(conv.getContactId())) {
+                return conv;
+            }
+        }
+
+        // Create new
+        Conversation conv = Conversation.builder().type("SMS").contactId(contactId).build();
+        conv = conversationRepository.save(conv);
+
+        User u = userService.getUserById(userId);
+
+        participantRepository.save(ConversationParticipant.builder()
+                .id(new ConversationParticipantId(conv.getId(), u.getId()))
+                .conversation(conv).user(u).role("MEMBER").build());
+
+        return conv;
+    }
     
+    @Transactional
     public Message saveMessage(Message message) {
+        Conversation conv = conversationRepository.findById(message.getConversationId()).orElse(null);
+        if (conv != null && "SMS".equals(conv.getType())) {
+            User sender = userService.getUserById(message.getSenderId());
+            com.callora.server.common.entity.Contact contact = contactRepository.findById(conv.getContactId()).orElse(null);
+            
+            if (contact != null) {
+                message.setSenderNumber(sender.getVerifiedSenderNumber());
+                message.setRecipientNumber(contact.getPhoneNumber());
+                message.setDirection("OUTGOING");
+                
+                boolean sent = smsProvider.sendSms(message.getSenderNumber(), message.getRecipientNumber(), message.getContent());
+                message.setStatus(sent ? "SENT" : "FAILED");
+            }
+        }
         return messageRepository.save(message);
     }
 }

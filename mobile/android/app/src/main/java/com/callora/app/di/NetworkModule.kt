@@ -2,6 +2,8 @@ package com.callora.app.di
 
 import com.callora.app.data.local.TokenManager
 import com.callora.app.data.remote.AuthInterceptor
+import com.callora.app.data.remote.api.ChatApi
+import com.callora.app.data.remote.api.ContactsApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -49,5 +51,17 @@ object NetworkModule {
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideChatApi(retrofit: Retrofit): ChatApi {
+        return retrofit.create(ChatApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideContactsApi(retrofit: Retrofit): ContactsApi {
+        return retrofit.create(ContactsApi::class.java)
     }
 }

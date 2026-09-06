@@ -38,4 +38,12 @@ public class ContactController {
         contactService.deleteContact(userId, contactId);
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/{contactId}")
+    public ResponseEntity<ContactDto> updateContact(@AuthenticationPrincipal Jwt jwt, 
+                                                    @PathVariable UUID contactId,
+                                                    @RequestBody AddContactRequest request) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+        return ResponseEntity.ok(contactService.updateContact(userId, contactId, request));
+    }
 }
