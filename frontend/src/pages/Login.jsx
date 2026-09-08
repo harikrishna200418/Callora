@@ -2,8 +2,14 @@ import { useState } from 'react'
 import './Auth.css'
 import { apiLogin } from '../services/api'
 import { Link } from 'react-router-dom'
+import usePageMeta from '../hooks/usePageMeta'
+import useToast from '../hooks/useToast'
+import ToastContainer from '../components/Toast.jsx'
 
 export default function Login({ onAuthSuccess }) {
+  usePageMeta('Sign In', 'Sign in to your Callora account for battery-aware communication.')
+  const { toasts, showError, dismissToast } = useToast()
+
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -17,7 +23,9 @@ export default function Login({ onAuthSuccess }) {
       const { accessToken, refreshToken, username: responseUser, userId } = await apiLogin(username, password)
       onAuthSuccess(accessToken, refreshToken, responseUser || username, userId)
     } catch (err) {
-      setError(err.message || 'Login failed')
+      const msg = err.message || 'Login failed'
+      setError(msg)
+      showError(msg)
     } finally {
       setLoading(false)
     }
@@ -75,7 +83,7 @@ export default function Login({ onAuthSuccess }) {
             <label htmlFor="login-password" className="float-label">Password</label>
           </div>
 
-          {error && <div className="auth-error">{error}</div>}
+          {error && <div className="auth-error"><span className="auth-error-icon">✕</span> {error}</div>}
 
           <button
             type="submit"
@@ -90,6 +98,7 @@ export default function Login({ onAuthSuccess }) {
           Don't have an account? <Link to="/register">Create one</Link>
         </p>
       </div>
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>
   )
 }

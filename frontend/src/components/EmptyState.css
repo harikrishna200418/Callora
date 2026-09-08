@@ -1,0 +1,46 @@
+/* ======================================================
+   Empty State — Centered placeholder for empty views
+   ====================================================== */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px 24px;
+  text-align: center;
+  flex: 1;
+  min-height: 200px;
+}
+
+.empty-state-icon {
+  opacity: 0.3;
+  animation: float-gentle 4s ease-in-out infinite;
+  margin-bottom: 8px;
+}
+
+.empty-state-title {
+  font-size: var(--font-lg);
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.empty-state-subtitle {
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+  max-width: 280px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.empty-state-action {
+  margin-top: 16px;
+}
+
+.empty-state-action .btn-primary {
+  width: auto;
+  padding: 10px 24px;
+  font-size: var(--font-sm);
+}

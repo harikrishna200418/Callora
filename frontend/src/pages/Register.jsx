@@ -2,8 +2,14 @@ import { useState } from 'react'
 import './Auth.css'
 import { apiRegister } from '../services/api'
 import { Link } from 'react-router-dom'
+import usePageMeta from '../hooks/usePageMeta'
+import useToast from '../hooks/useToast'
+import ToastContainer from '../components/Toast.jsx'
 
 export default function Register({ onAuthSuccess }) {
+  usePageMeta('Create Account', 'Join Callora — the battery-aware communication platform.')
+  const { toasts, showError, dismissToast } = useToast()
+
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -18,7 +24,9 @@ export default function Register({ onAuthSuccess }) {
       const { accessToken, refreshToken, username: responseUser, userId } = await apiRegister(username, password, email)
       onAuthSuccess(accessToken, refreshToken, responseUser || username, userId)
     } catch (err) {
-      setError(err.message || 'Registration failed')
+      const msg = err.message || 'Registration failed'
+      setError(msg)
+      showError(msg)
     } finally {
       setLoading(false)
     }
@@ -88,7 +96,7 @@ export default function Register({ onAuthSuccess }) {
             <label htmlFor="reg-password" className="float-label">Password</label>
           </div>
 
-          {error && <div className="auth-error">{error}</div>}
+          {error && <div className="auth-error"><span className="auth-error-icon">✕</span> {error}</div>}
 
           <button
             type="submit"
@@ -103,6 +111,7 @@ export default function Register({ onAuthSuccess }) {
           Already have an account? <Link to="/login">Flow In</Link>
         </p>
       </div>
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>
   )
 }
